@@ -20,7 +20,7 @@ export function useComposerInsert({
         return;
       }
       const textarea = textareaRef.current;
-      const currentText = draftText ?? "";
+      const currentText = textarea?.value ?? draftText ?? "";
       const start = textarea?.selectionStart ?? currentText.length;
       const end = textarea?.selectionEnd ?? start;
       const before = currentText.slice(0, start);

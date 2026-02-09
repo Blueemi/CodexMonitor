@@ -52,4 +52,28 @@ describe("useComposerInsert", () => {
 
     expect(onDraftChange).not.toHaveBeenCalled();
   });
+
+  it("uses live textarea text when draftText is stale", () => {
+    const textarea = document.createElement("textarea");
+    textarea.value = "Hello world";
+    textarea.selectionStart = 11;
+    textarea.selectionEnd = 11;
+    const textareaRef: RefObject<HTMLTextAreaElement> = { current: textarea };
+    const onDraftChange = vi.fn();
+
+    const { result } = renderHook(() =>
+      useComposerInsert({
+        isEnabled: true,
+        draftText: "Hello",
+        onDraftChange,
+        textareaRef,
+      }),
+    );
+
+    act(() => {
+      result.current("./src");
+    });
+
+    expect(onDraftChange).toHaveBeenCalledWith("Hello world ./src");
+  });
 });

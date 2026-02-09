@@ -350,7 +350,7 @@ const PullRequestSummary = memo(function PullRequestSummary({
   );
 });
 
-export function GitDiffViewer({
+export const GitDiffViewer = memo(function GitDiffViewer({
   diffs,
   selectedPath,
   scrollRequestId,
@@ -707,4 +707,6 @@ export function GitDiffViewer({
       </div>
     </WorkerPoolContextProvider>
   );
-}
+});
+
+GitDiffViewer.displayName = "GitDiffViewer";

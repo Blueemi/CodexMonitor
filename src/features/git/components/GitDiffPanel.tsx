@@ -9,7 +9,7 @@ import FileText from "lucide-react/dist/esm/icons/file-text";
 import GitBranch from "lucide-react/dist/esm/icons/git-branch";
 import ScrollText from "lucide-react/dist/esm/icons/scroll-text";
 import Search from "lucide-react/dist/esm/icons/search";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { PanelTabs, type PanelTabId } from "../../layout/components/PanelTabs";
 import {
   PanelFrame,
@@ -143,7 +143,7 @@ type GitDiffPanelProps = {
   commitsAhead?: number;
 };
 
-export function GitDiffPanel({
+export const GitDiffPanel = memo(function GitDiffPanel({
   workspaceId = null,
   workspacePath = null,
   mode,
@@ -784,4 +784,6 @@ export function GitDiffPanel({
       )}
     </PanelFrame>
   );
-}
+});
+
+GitDiffPanel.displayName = "GitDiffPanel";

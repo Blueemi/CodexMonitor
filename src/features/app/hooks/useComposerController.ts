@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { QueuedMessage, WorkspaceInfo } from "../../../types";
 import { useComposerImages } from "../../composer/hooks/useComposerImages";
 import { useQueuedSend } from "../../threads/hooks/useQueuedSend";
@@ -52,9 +52,7 @@ export function useComposerController({
   startMcp: (text: string) => Promise<void>;
   startStatus: (text: string) => Promise<void>;
 }) {
-  const [composerDraftsByThread, setComposerDraftsByThread] = useState<
-    Record<string, string>
-  >({});
+  const composerDraftsByThreadRef = useRef<Record<string, string>>({});
   const [prefillDraft, setPrefillDraft] = useState<QueuedMessage | null>(null);
   const [composerInsert, setComposerInsert] = useState<QueuedMessage | null>(
     null,
@@ -97,21 +95,16 @@ export function useComposerController({
     clearActiveImages,
   });
 
-  const activeDraft = useMemo(
-    () =>
-      activeThreadId ? composerDraftsByThread[activeThreadId] ?? "" : "",
-    [activeThreadId, composerDraftsByThread],
-  );
+  const activeDraft = activeThreadId
+    ? composerDraftsByThreadRef.current[activeThreadId] ?? ""
+    : "";
 
   const handleDraftChange = useCallback(
     (next: string) => {
       if (!activeThreadId) {
         return;
       }
-      setComposerDraftsByThread((prev) => ({
-        ...prev,
-        [activeThreadId]: next,
-      }));
+      composerDraftsByThreadRef.current[activeThreadId] = next;
     },
     [activeThreadId],
   );
@@ -149,13 +142,7 @@ export function useComposerController({
   );
 
   const clearDraftForThread = useCallback((threadId: string) => {
-    setComposerDraftsByThread((prev) => {
-      if (!(threadId in prev)) {
-        return prev;
-      }
-      const { [threadId]: _, ...rest } = prev;
-      return rest;
-    });
+    delete composerDraftsByThreadRef.current[threadId];
   }, []);
 
   return {
