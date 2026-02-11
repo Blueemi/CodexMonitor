@@ -649,13 +649,7 @@
 }
 
 .workspace-row.active::before {
-  background: linear-gradient(
-    90deg,
-    var(--border-accent) 0,
-    var(--border-accent) 3px,
-    var(--surface-card) 3px,
-    var(--surface-card) 100%
-  );
+  background: var(--surface-card);
 }
 
 .workspace-row.active .workspace-name {
@@ -1071,7 +1065,7 @@
 
 .worktree-row.active {
   background: var(--surface-card);
-  border-left: 2px solid var(--border-accent);
+  border-left: none;
   padding-left: 6px;
 }
 
@@ -1219,6 +1213,8 @@
   border-radius: 999px;
   background: var(--surface-card-muted);
   overflow: hidden;
+  box-shadow: none;
+  filter: none;
 }
 
 .usage-bar-fill {
@@ -1226,6 +1222,8 @@
   height: 100%;
   border-radius: inherit;
   background: var(--text-accent);
+  box-shadow: none;
+  filter: none;
 }
 
 .usage-meta {

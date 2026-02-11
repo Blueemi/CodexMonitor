@@ -18,4 +18,7 @@ cd src-tauri && cargo check
 [[actions]]
 name = "Run"
 icon = "run"
-command = "npm run tauri dev"
+command = '''
+kill -9 $(lsof -ti tcp:1420)
+npm run tauri dev
+'''
