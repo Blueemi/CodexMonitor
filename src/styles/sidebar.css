@@ -1,9 +1,9 @@
 .sidebar {
   --sidebar-padding: 18px;
   padding: 34px var(--sidebar-padding) 14px;
-  background: rgba(4, 4, 6, 0.58);
-  backdrop-filter: blur(28px) saturate(140%);
-  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--surface-sidebar);
+  backdrop-filter: none;
+  border-right: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
   gap: 8px;
