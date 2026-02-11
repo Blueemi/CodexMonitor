@@ -1,4 +1,4 @@
-# CodexMonitor
+# This is a CodexMonitor fork made by me for my personal ui preferrences + some QoL tweaks. If u want newest updates and original looks, check upstream!
 
 ![CodexMonitor](screenshot.png)
 
