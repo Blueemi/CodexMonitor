@@ -113,6 +113,34 @@ export type ReviewTarget =
   | { type: "commit"; sha: string; title?: string }
   | { type: "custom"; instructions: string };
 
+export type PullRequestReviewIntent =
+  | "full"
+  | "risks"
+  | "tests"
+  | "summary"
+  | "question";
+
+export type PullRequestReviewAction = {
+  id: string;
+  label: string;
+  intent: PullRequestReviewIntent;
+};
+
+export type PullRequestSelectionLine = {
+  type: "add" | "del" | "context";
+  oldLine: number | null;
+  newLine: number | null;
+  text: string;
+};
+
+export type PullRequestSelectionRange = {
+  path: string;
+  status: string;
+  start: number;
+  end: number;
+  lines: PullRequestSelectionLine[];
+};
+
 export type AccessMode = "read-only" | "current" | "full-access";
 export type BackendMode = "local" | "remote";
 export type RemoteBackendProvider = "tcp" | "orbit";
@@ -189,6 +217,7 @@ export type AppSettings = {
   codeFontSize: number;
   notificationSoundsEnabled: boolean;
   systemNotificationsEnabled: boolean;
+  splitChatDiffView: boolean;
   preloadGitDiffs: boolean;
   gitDiffIgnoreWhitespaceChanges: boolean;
   commitMessagePrompt: string;
@@ -546,6 +575,12 @@ export type QueuedMessage = {
   text: string;
   createdAt: number;
   images?: string[];
+  appMentions?: AppMention[];
+};
+
+export type AppMention = {
+  name: string;
+  path: string;
 };
 
 export type ModelOption = {

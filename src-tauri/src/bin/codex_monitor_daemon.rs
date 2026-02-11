@@ -702,6 +702,7 @@ impl DaemonState {
         effort: Option<String>,
         access_mode: Option<String>,
         images: Option<Vec<String>>,
+        app_mentions: Option<Vec<Value>>,
         collaboration_mode: Option<Value>,
     ) -> Result<Value, String> {
         codex_core::send_user_message_core(
@@ -713,6 +714,7 @@ impl DaemonState {
             effort,
             access_mode,
             images,
+            app_mentions,
             collaboration_mode,
         )
         .await
@@ -725,6 +727,7 @@ impl DaemonState {
         turn_id: String,
         text: String,
         images: Option<Vec<String>>,
+        app_mentions: Option<Vec<Value>>,
     ) -> Result<Value, String> {
         codex_core::turn_steer_core(
             &self.sessions,
@@ -733,6 +736,7 @@ impl DaemonState {
             turn_id,
             text,
             images,
+            app_mentions,
         )
         .await
     }
@@ -791,8 +795,9 @@ impl DaemonState {
         workspace_id: String,
         cursor: Option<String>,
         limit: Option<u32>,
+        thread_id: Option<String>,
     ) -> Result<Value, String> {
-        codex_core::apps_list_core(&self.sessions, workspace_id, cursor, limit).await
+        codex_core::apps_list_core(&self.sessions, workspace_id, cursor, limit, thread_id).await
     }
 
     async fn respond_to_server_request(
@@ -997,6 +1002,15 @@ impl DaemonState {
             pr_number,
         )
         .await
+    }
+
+    async fn checkout_github_pull_request(
+        &self,
+        workspace_id: String,
+        pr_number: u64,
+    ) -> Result<(), String> {
+        git_ui_core::checkout_github_pull_request_core(&self.workspaces, workspace_id, pr_number)
+            .await
     }
 
     async fn list_git_branches(&self, workspace_id: String) -> Result<Value, String> {
