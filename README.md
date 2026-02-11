@@ -1,10 +1,8 @@
-# CodexMonitor
+# This is a CodexMonitor fork made by me for my personal ui preferrences + some QoL tweaks. If u want newest updates and original looks, check upstream!
 
 ![CodexMonitor](screenshot.png)
 
 CodexMonitor is a Tauri app for orchestrating multiple Codex agents across local workspaces. It provides a sidebar to manage projects, a home screen for quick actions, and a conversation view backed by the Codex app-server protocol.
-
-### This is a CodexMonitor fork made by me for my personal ui preferrences + some QoL tweaks. If u want newest updates and original looks, check upstream!
 
 ## Features
 
