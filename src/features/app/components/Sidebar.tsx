@@ -609,6 +609,7 @@ export const Sidebar = memo(function Sidebar({
                           className={`thread-row thread-row-draft${
                             isDraftRowActive ? " active" : ""
                           }`}
+                          data-thread-status={draftStatusClass}
                           onClick={() => onSelectWorkspace(entry.id)}
                           role="button"
                           tabIndex={0}
@@ -619,7 +620,6 @@ export const Sidebar = memo(function Sidebar({
                             }
                           }}
                         >
-                          <span className={`thread-status ${draftStatusClass}`} aria-hidden />
                           <span className="thread-name">New Agent</span>
                         </div>
                       )}

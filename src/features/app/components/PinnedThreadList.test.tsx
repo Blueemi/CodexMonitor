@@ -51,9 +51,7 @@ describe("PinnedThreadList", () => {
       throw new Error("Missing pinned row");
     }
     expect(row.classList.contains("active")).toBe(true);
-    expect(row.querySelector(".thread-status")?.className).toContain(
-      "reviewing",
-    );
+    expect(row.getAttribute("data-thread-status")).toBe("reviewing");
     expect(screen.getByLabelText("Pinned")).toBeTruthy();
 
     fireEvent.click(row);

@@ -57,6 +57,13 @@ function ComposerHarness({
         highlightIndex={0}
         onHighlightIndex={() => {}}
         onSelectSuggestion={() => {}}
+        models={[]}
+        selectedModelId={null}
+        onSelectModel={() => {}}
+        reasoningOptions={[]}
+        selectedEffort={null}
+        onSelectEffort={() => {}}
+        reasoningSupported={false}
       />
       <button
         type="button"

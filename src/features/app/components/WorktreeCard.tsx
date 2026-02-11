@@ -27,6 +27,10 @@ export function WorktreeCard({
   const worktreeBranch = worktree.worktree?.branch ?? "";
   const worktreeLabel = worktree.name?.trim() || worktreeBranch;
   const contentCollapsedClass = worktreeCollapsed ? " collapsed" : "";
+  const handleToggleRow = () => {
+    onSelectWorkspace(worktree.id);
+    onToggleWorkspaceCollapse(worktree.id, !worktreeCollapsed);
+  };
 
   return (
     <div className={`worktree-card${isDeleting ? " deleting" : ""}`}>
@@ -37,7 +41,7 @@ export function WorktreeCard({
         aria-disabled={isDeleting}
         onClick={() => {
           if (!isDeleting) {
-            onSelectWorkspace(worktree.id);
+            handleToggleRow();
           }
         }}
         onContextMenu={(event) => {
@@ -51,7 +55,7 @@ export function WorktreeCard({
           }
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
-            onSelectWorkspace(worktree.id);
+            handleToggleRow();
           }
         }}
       >

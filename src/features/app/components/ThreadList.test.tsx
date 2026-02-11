@@ -60,7 +60,7 @@ describe("ThreadList", () => {
       throw new Error("Missing thread row");
     }
     expect(row.classList.contains("active")).toBe(true);
-    expect(row.querySelector(".thread-status")?.className).toContain("unread");
+    expect(row.getAttribute("data-thread-status")).toBe("unread");
 
     fireEvent.click(row);
     expect(onSelectThread).toHaveBeenCalledWith("ws-1", "thread-1");

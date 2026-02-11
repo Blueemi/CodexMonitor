@@ -41,7 +41,7 @@
   z-index: 2;
   padding: 10px 12px calc(10px + var(--phone-composer-safe-bottom, 0px));
   border-top: 1px solid var(--border-subtle);
-  backdrop-filter: blur(18px) saturate(1.1);
+  backdrop-filter: none;
 }
 
 html[data-mobile-composer-focus="true"] .app.layout-phone {

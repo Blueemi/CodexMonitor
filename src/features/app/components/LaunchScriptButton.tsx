@@ -1,10 +1,9 @@
 import { useRef } from "react";
-import Play from "lucide-react/dist/esm/icons/play";
 import type { LaunchScriptIconId } from "../../../types";
 import { PopoverSurface } from "../../design-system/components/popover/PopoverPrimitives";
 import { useDismissibleMenu } from "../hooks/useDismissibleMenu";
 import { LaunchScriptIconPicker } from "./LaunchScriptIconPicker";
-import { DEFAULT_LAUNCH_SCRIPT_ICON } from "../utils/launchScriptIcons";
+import { DEFAULT_LAUNCH_SCRIPT_ICON, getLaunchScriptIcon } from "../utils/launchScriptIcons";
 
 type LaunchScriptButtonProps = {
   launchScript: string | null;
@@ -57,6 +56,7 @@ export function LaunchScriptButton({
 }: LaunchScriptButtonProps) {
   const popoverRef = useRef<HTMLDivElement | null>(null);
   const hasLaunchScript = Boolean(launchScript?.trim());
+  const RunIcon = getLaunchScriptIcon(DEFAULT_LAUNCH_SCRIPT_ICON);
 
   useDismissibleMenu({
     isOpen: editorOpen,
@@ -82,7 +82,7 @@ export function LaunchScriptButton({
           aria-label={hasLaunchScript ? "Run launch script" : "Set launch script"}
           title={hasLaunchScript ? "Run launch script" : "Set launch script"}
         >
-          <Play size={14} aria-hidden />
+          <RunIcon size={14} aria-hidden />
         </button>
       </div>
       {editorOpen && (

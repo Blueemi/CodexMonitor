@@ -1,5 +1,4 @@
 import type { CSSProperties } from "react";
-import { BrainCog } from "lucide-react";
 import type { AccessMode, ThreadTokenUsage } from "../../../types";
 
 type ComposerMetaBarProps = {
@@ -7,13 +6,6 @@ type ComposerMetaBarProps = {
   collaborationModes: { id: string; label: string }[];
   selectedCollaborationModeId: string | null;
   onSelectCollaborationMode: (id: string | null) => void;
-  models: { id: string; displayName: string; model: string }[];
-  selectedModelId: string | null;
-  onSelectModel: (id: string) => void;
-  reasoningOptions: string[];
-  selectedEffort: string | null;
-  onSelectEffort: (effort: string) => void;
-  reasoningSupported: boolean;
   accessMode: AccessMode;
   onSelectAccessMode: (mode: AccessMode) => void;
   contextUsage?: ThreadTokenUsage | null;
@@ -24,13 +16,6 @@ export function ComposerMetaBar({
   collaborationModes,
   selectedCollaborationModeId,
   onSelectCollaborationMode,
-  models,
-  selectedModelId,
-  onSelectModel,
-  reasoningOptions,
-  selectedEffort,
-  onSelectEffort,
-  reasoningSupported,
   accessMode,
   onSelectAccessMode,
   contextUsage = null,
@@ -125,72 +110,9 @@ export function ComposerMetaBar({
             </div>
           )
         )}
-        <div className="composer-select-wrap composer-select-wrap--model">
-          <span className="composer-icon composer-icon--model" aria-hidden>
-            <svg viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 4v2"
-                stroke="currentColor"
-                strokeWidth="1.4"
-                strokeLinecap="round"
-              />
-              <path
-                d="M8 7.5h8a2.5 2.5 0 0 1 2.5 2.5v5a2.5 2.5 0 0 1-2.5 2.5H8A2.5 2.5 0 0 1 5.5 15v-5A2.5 2.5 0 0 1 8 7.5Z"
-                stroke="currentColor"
-                strokeWidth="1.4"
-                strokeLinejoin="round"
-              />
-              <circle cx="9.5" cy="12.5" r="1" fill="currentColor" />
-              <circle cx="14.5" cy="12.5" r="1" fill="currentColor" />
-              <path
-                d="M9.5 15.5h5"
-                stroke="currentColor"
-                strokeWidth="1.4"
-                strokeLinecap="round"
-              />
-              <path
-                d="M5.5 11H4M20 11h-1.5"
-                stroke="currentColor"
-                strokeWidth="1.4"
-                strokeLinecap="round"
-              />
-            </svg>
-          </span>
-          <select
-            className="composer-select composer-select--model"
-            aria-label="Model"
-            value={selectedModelId ?? ""}
-            onChange={(event) => onSelectModel(event.target.value)}
-            disabled={disabled}
-          >
-            {models.length === 0 && <option value="">No models</option>}
-            {models.map((model) => (
-              <option key={model.id} value={model.id}>
-                {model.displayName || model.model}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="composer-select-wrap composer-select-wrap--effort">
-          <span className="composer-icon composer-icon--effort" aria-hidden>
-            <BrainCog size={14} strokeWidth={1.8} />
-          </span>
-          <select
-            className="composer-select composer-select--effort"
-            aria-label="Thinking mode"
-            value={selectedEffort ?? ""}
-            onChange={(event) => onSelectEffort(event.target.value)}
-            disabled={disabled || !reasoningSupported}
-          >
-            {reasoningOptions.length === 0 && <option value="">Default</option>}
-            {reasoningOptions.map((effort) => (
-              <option key={effort} value={effort}>
-                {effort}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="composer-select-wrap">
+        <div
+          className={`composer-select-wrap composer-select-wrap--access composer-select-wrap--access-${accessMode}`}
+        >
           <span className="composer-icon" aria-hidden>
             <svg viewBox="0 0 24 24" fill="none">
               <path

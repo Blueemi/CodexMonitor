@@ -37,6 +37,10 @@ export function WorkspaceCard({
   children,
 }: WorkspaceCardProps) {
   const contentCollapsedClass = isCollapsed ? " collapsed" : "";
+  const handleToggleRow = () => {
+    onSelectWorkspace(workspace.id);
+    onToggleWorkspaceCollapse(workspace.id, !isCollapsed);
+  };
 
   return (
     <div className="workspace-card">
@@ -44,12 +48,12 @@ export function WorkspaceCard({
         className={`workspace-row ${isActive ? "active" : ""}`}
         role="button"
         tabIndex={0}
-        onClick={() => onSelectWorkspace(workspace.id)}
+        onClick={handleToggleRow}
         onContextMenu={(event) => onShowWorkspaceMenu(event, workspace.id)}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
-            onSelectWorkspace(workspace.id);
+            handleToggleRow();
           }
         }}
       >

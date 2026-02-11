@@ -66,6 +66,7 @@ export function PinnedThreadList({
                 ? "active"
                 : ""
             }`}
+            data-thread-status={statusClass}
             style={indentStyle}
             onClick={() => onSelectThread(workspaceId, thread.id)}
             onContextMenu={(event) =>
@@ -80,7 +81,6 @@ export function PinnedThreadList({
               }
             }}
           >
-            <span className={`thread-status ${statusClass}`} aria-hidden />
             {isPinned && (
               <span className="thread-pin-icon" aria-label="Pinned">
                 📌

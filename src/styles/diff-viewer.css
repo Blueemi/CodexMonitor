@@ -319,8 +319,8 @@
 }
 
 .diff-viewer-header-sticky {
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   pointer-events: auto;
 }
 

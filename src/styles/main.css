@@ -8,6 +8,7 @@
   -webkit-app-region: no-drag;
   min-height: 0;
   min-width: 0;
+  background: var(--surface-messages);
   --main-panel-padding: 24px;
   transition: grid-template-columns 220ms ease;
 }
@@ -347,7 +348,7 @@
   position: sticky;
   top: 0;
   z-index: 3;
-  backdrop-filter: blur(18px) saturate(1.2);
+  backdrop-filter: none;
   min-height: var(--main-topbar-height);
 }
 
@@ -384,11 +385,6 @@
     + var(--titlebar-toggle-side-gap, 12px)
   );
 }
-
-.app.reduced-transparency .main-topbar {
-  backdrop-filter: none;
-}
-
 
 .main-topbar-left {
   display: flex;

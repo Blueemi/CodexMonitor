@@ -399,6 +399,13 @@ export function WorkspaceHome({
             onHighlightIndex={setHighlightIndex}
             onSelectSuggestion={applyAutocomplete}
             suggestionsStyle={suggestionsStyle}
+            models={models}
+            selectedModelId={selectedModelId}
+            onSelectModel={onSelectModel}
+            reasoningOptions={reasoningOptions}
+            selectedEffort={selectedEffort}
+            onSelectEffort={onSelectEffort}
+            reasoningSupported={reasoningSupported}
           />
         </div>
         {error && <div className="workspace-home-error">{error}</div>}

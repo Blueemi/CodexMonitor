@@ -861,14 +861,6 @@
   position: relative;
 }
 
-.thread-status {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  display: inline-block;
-  margin-left: 4px;
-}
-
 .thread-pin-icon {
   font-size: 10px;
   margin-right: 2px;
@@ -877,24 +869,6 @@
 
 .thread-row:hover .thread-pin-icon {
   opacity: 1;
-}
-
-.thread-status.processing {
-  background: var(--status-warning);
-  animation: pulse 1.2s ease-in-out infinite;
-}
-
-.thread-status.reviewing {
-  background: var(--text-accent);
-  animation: pulse 1.4s ease-in-out infinite;
-}
-
-.thread-status.unread {
-  background: var(--text-accent);
-}
-
-.thread-status.ready {
-  background: var(--status-success);
 }
 
 .thread-row:hover {

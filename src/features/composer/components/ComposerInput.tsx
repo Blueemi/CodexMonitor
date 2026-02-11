@@ -68,6 +68,13 @@ type ComposerInputProps = {
   onHighlightIndex: (index: number) => void;
   onSelectSuggestion: (item: AutocompleteItem) => void;
   suggestionsStyle?: React.CSSProperties;
+  models: { id: string; displayName: string; model: string }[];
+  selectedModelId: string | null;
+  onSelectModel: (id: string) => void;
+  reasoningOptions: string[];
+  selectedEffort: string | null;
+  onSelectEffort: (effort: string) => void;
+  reasoningSupported: boolean;
   reviewPrompt?: ReviewPromptState;
   onReviewPromptClose?: () => void;
   onReviewPromptShowPreset?: () => void;
@@ -170,6 +177,13 @@ export function ComposerInput({
   onHighlightIndex,
   onSelectSuggestion,
   suggestionsStyle,
+  models,
+  selectedModelId,
+  onSelectModel,
+  reasoningOptions,
+  selectedEffort,
+  onSelectEffort,
+  reasoningSupported,
   reviewPrompt,
   onReviewPromptClose,
   onReviewPromptShowPreset,
@@ -262,8 +276,8 @@ export function ComposerInput({
     if (!textarea) {
       return;
     }
-    const minTextareaHeight = isExpanded ? (isPhoneLayout ? 152 : 180) : isPhoneLayout ? 52 : 60;
-    const maxTextareaHeight = isExpanded ? (isPhoneLayout ? 280 : 320) : isPhoneLayout ? 168 : 120;
+    const minTextareaHeight = isExpanded ? (isPhoneLayout ? 152 : 210) : isPhoneLayout ? 44 : 56;
+    const maxTextareaHeight = isExpanded ? (isPhoneLayout ? 280 : 360) : isPhoneLayout ? 168 : 170;
     textarea.style.height = "auto";
     textarea.style.minHeight = `${minTextareaHeight}px`;
     textarea.style.maxHeight = `${maxTextareaHeight}px`;
@@ -428,16 +442,6 @@ export function ComposerInput({
           onRemoveAttachment={onRemoveAttachment}
         />
         <div className="composer-input-row">
-          <button
-            type="button"
-            className="composer-attach"
-            onClick={onAddAttachment}
-            disabled={disabled || !onAddAttachment}
-            aria-label="Add image"
-            title="Add image"
-          >
-            <ImagePlus size={14} aria-hidden />
-          </button>
           <div
             className={`composer-mobile-menu${mobileActionsOpen ? " is-open" : ""}`}
             ref={mobileActionsRef}
@@ -499,7 +503,7 @@ export function ComposerInput({
             placeholder={
               disabled
                 ? "Review in progress. Chat will re-enable when it completes."
-                : "Ask Codex to do something..."
+                : "Ask for follow-up changes"
             }
             value={text}
             onChange={handleTextareaChange}
@@ -669,63 +673,94 @@ export function ComposerInput({
           </PopoverSurface>
         )}
       </div>
-      {onToggleExpand && (
-        <button
-          className={`composer-action composer-action--expand${
-            isExpanded ? " is-active" : ""
-          }`}
-          onClick={onToggleExpand}
-          disabled={disabled}
-          aria-label={isExpanded ? "Collapse input" : "Expand input"}
-          title={isExpanded ? "Collapse input" : "Expand input"}
-        >
-          {isExpanded ? <ChevronDown aria-hidden /> : <ChevronUp aria-hidden />}
-        </button>
-      )}
-      <button
-        className={`composer-action composer-action--mic${
-          isDictationBusy ? " is-active" : ""
-        }${dictationState === "processing" ? " is-processing" : ""}${
-          micDisabled ? " is-disabled" : ""
-        }`}
-        onClick={handleMicClick}
-        disabled={
-          disabled ||
-          dictationState === "processing" ||
-          (!onToggleDictation && !allowOpenDictationSettings)
-        }
-        aria-label={micAriaLabel}
-        title={micTitle}
-      >
-        {isDictating ? <Square aria-hidden /> : <Mic aria-hidden />}
-      </button>
-      <button
-        className={`composer-action${canStop ? " is-stop" : " is-send"}${
-          canStop && isProcessing ? " is-loading" : ""
-        }`}
-        onClick={handleActionClick}
-        disabled={disabled || isDictationBusy || (!canStop && !canSend)}
-        aria-label={canStop ? "Stop" : sendLabel}
-      >
-        {canStop ? (
-          <>
-            <span className="composer-action-stop-square" aria-hidden />
-            {isProcessing && (
-              <span className="composer-action-spinner" aria-hidden />
+      <div className="composer-input-toolbar">
+        <div className="composer-input-toolbar-left">
+          <button
+            type="button"
+            className="composer-toolbar-attach"
+            onClick={onAddAttachment}
+            disabled={disabled || !onAddAttachment}
+            aria-label="Add attachment"
+            title="Add attachment"
+          >
+            <Plus size={14} aria-hidden />
+          </button>
+          <select
+            className="composer-toolbar-select composer-toolbar-select--model"
+            aria-label="Model"
+            value={selectedModelId ?? ""}
+            onChange={(event) => onSelectModel(event.target.value)}
+            disabled={disabled}
+          >
+            {models.length === 0 && <option value="">No models</option>}
+            {models.map((model) => (
+              <option key={model.id} value={model.id}>
+                {model.displayName || model.model}
+              </option>
+            ))}
+          </select>
+          <select
+            className="composer-toolbar-select composer-toolbar-select--effort"
+            aria-label="Thinking mode"
+            value={selectedEffort ?? ""}
+            onChange={(event) => onSelectEffort(event.target.value)}
+            disabled={disabled || !reasoningSupported}
+          >
+            {reasoningOptions.length === 0 && <option value="">Default</option>}
+            {reasoningOptions.map((effort) => (
+              <option key={effort} value={effort}>
+                {effort}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="composer-input-toolbar-right">
+          <button
+            className={`composer-action composer-action--mic${
+              isDictationBusy ? " is-active" : ""
+            }${dictationState === "processing" ? " is-processing" : ""}${
+              micDisabled ? " is-disabled" : ""
+            }`}
+            onClick={handleMicClick}
+            disabled={
+              disabled ||
+              dictationState === "processing" ||
+              (!onToggleDictation && !allowOpenDictationSettings)
+            }
+            aria-label={micAriaLabel}
+            title={micTitle}
+          >
+            {isDictating ? <Square aria-hidden /> : <Mic aria-hidden />}
+          </button>
+          <button
+            className={`composer-action${canStop ? " is-stop" : " is-send"}${
+              canStop && isProcessing ? " is-loading" : ""
+            }`}
+            onClick={handleActionClick}
+            disabled={disabled || isDictationBusy || (!canStop && !canSend)}
+            aria-label={canStop ? "Stop" : sendLabel}
+          >
+            {canStop ? (
+              <>
+                <span className="composer-action-stop-square" aria-hidden />
+                {isProcessing && (
+                  <span className="composer-action-spinner" aria-hidden />
+                )}
+              </>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                  d="M12 5l6 6m-6-6L6 11m6-6v14"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             )}
-          </>
-        ) : (
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-            <path
-              d="M12 5l6 6m-6-6L6 11m6-6v14"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        )}
-      </button>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
