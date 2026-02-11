@@ -121,6 +121,24 @@ describe("useAppSettings", () => {
     expect(result.current.settings.uiScale).toBe(2.4);
   });
 
+  it("migrates legacy plan/sidebar shortcut collisions", async () => {
+    getAppSettingsMock.mockResolvedValue(
+      ({
+        composerCollaborationShortcut: "shift+tab",
+        toggleProjectsSidebarShortcut: "cmd+shift+p",
+      } as unknown) as AppSettings,
+    );
+
+    const { result } = renderHook(() => useAppSettings());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.settings.composerCollaborationShortcut).toMatch(/shift\+p$/);
+    expect(result.current.settings.toggleProjectsSidebarShortcut).toMatch(/shift\+o$/);
+    expect(result.current.settings.composerCollaborationShortcut).not.toBe(
+      result.current.settings.toggleProjectsSidebarShortcut,
+    );
+  });
+
   it("surfaces doctor errors", async () => {
     getAppSettingsMock.mockResolvedValue({} as AppSettings);
     runCodexDoctorMock.mockRejectedValue(new Error("doctor fail"));

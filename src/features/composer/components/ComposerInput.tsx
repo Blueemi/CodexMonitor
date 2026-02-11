@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type {
   ChangeEvent,
   ClipboardEvent,
@@ -27,6 +27,7 @@ import {
   PopoverMenuItem,
   PopoverSurface,
 } from "../../design-system/components/popover/PopoverPrimitives";
+import { useDismissibleMenu } from "../../app/hooks/useDismissibleMenu";
 import { ComposerAttachments } from "./ComposerAttachments";
 import { DictationWaveform } from "../../dictation/components/DictationWaveform";
 import { ReviewInlinePrompt } from "./ReviewInlinePrompt";
@@ -75,6 +76,10 @@ type ComposerInputProps = {
   selectedEffort: string | null;
   onSelectEffort: (effort: string) => void;
   reasoningSupported: boolean;
+  showPlanToggle?: boolean;
+  planLabel?: string;
+  planSelected?: boolean;
+  onTogglePlanMode?: (enabled: boolean) => void;
   reviewPrompt?: ReviewPromptState;
   onReviewPromptClose?: () => void;
   onReviewPromptShowPreset?: () => void;
@@ -184,6 +189,10 @@ export function ComposerInput({
   selectedEffort,
   onSelectEffort,
   reasoningSupported,
+  showPlanToggle = false,
+  planLabel = "Plan",
+  planSelected = false,
+  onTogglePlanMode,
   reviewPrompt,
   onReviewPromptClose,
   onReviewPromptShowPreset,
@@ -206,7 +215,15 @@ export function ComposerInput({
   const suggestionListRef = useRef<HTMLDivElement | null>(null);
   const suggestionRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const mobileActionsRef = useRef<HTMLDivElement | null>(null);
+  const modelMenuRef = useRef<HTMLDivElement | null>(null);
+  const effortMenuRef = useRef<HTMLDivElement | null>(null);
+  const modelDropdownRef = useRef<HTMLDivElement | null>(null);
+  const effortDropdownRef = useRef<HTMLDivElement | null>(null);
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
+  const [modelMenuOpen, setModelMenuOpen] = useState(false);
+  const [effortMenuOpen, setEffortMenuOpen] = useState(false);
+  const [modelMenuAbove, setModelMenuAbove] = useState(false);
+  const [effortMenuAbove, setEffortMenuAbove] = useState(false);
   const [isPhoneLayout, setIsPhoneLayout] = useState(false);
   const [isPhoneTallInput, setIsPhoneTallInput] = useState(false);
   const reviewPromptOpen = Boolean(reviewPrompt);
@@ -337,6 +354,81 @@ export function ComposerInput({
     }
   }, [disabled, mobileActionsOpen]);
 
+  useDismissibleMenu({
+    isOpen: modelMenuOpen,
+    containerRef: modelMenuRef,
+    onClose: () => setModelMenuOpen(false),
+  });
+
+  useDismissibleMenu({
+    isOpen: effortMenuOpen,
+    containerRef: effortMenuRef,
+    onClose: () => setEffortMenuOpen(false),
+  });
+
+  useEffect(() => {
+    if (!disabled) {
+      return;
+    }
+    setModelMenuOpen(false);
+    setEffortMenuOpen(false);
+  }, [disabled]);
+
+  const updateMenuPlacement = useCallback(
+    (
+      containerRef: RefObject<HTMLDivElement | null>,
+      dropdownRef: RefObject<HTMLDivElement | null>,
+      setAbove: (above: boolean) => void,
+    ) => {
+      const containerRect = containerRef.current?.getBoundingClientRect();
+      const dropdownRect = dropdownRef.current?.getBoundingClientRect();
+      if (!containerRect || !dropdownRect) {
+        setAbove(false);
+        return;
+      }
+      const gap = 8;
+      const viewportPadding = 8;
+      const spaceBelow = window.innerHeight - containerRect.bottom - viewportPadding;
+      const spaceAbove = containerRect.top - viewportPadding;
+      const shouldOpenAbove =
+        spaceBelow < dropdownRect.height + gap && spaceAbove > spaceBelow;
+      setAbove(shouldOpenAbove);
+    },
+    [],
+  );
+
+  useLayoutEffect(() => {
+    if (!modelMenuOpen) {
+      setModelMenuAbove(false);
+      return;
+    }
+    const update = () =>
+      updateMenuPlacement(modelMenuRef, modelDropdownRef, setModelMenuAbove);
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [modelMenuOpen, updateMenuPlacement]);
+
+  useLayoutEffect(() => {
+    if (!effortMenuOpen) {
+      setEffortMenuAbove(false);
+      return;
+    }
+    const update = () =>
+      updateMenuPlacement(effortMenuRef, effortDropdownRef, setEffortMenuAbove);
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [effortMenuOpen, updateMenuPlacement]);
+
   const handleActionClick = useCallback(() => {
     if (canStop) {
       onStop();
@@ -420,6 +512,12 @@ export function ComposerInput({
     setMobileActionsOpen(false);
     onToggleExpand();
   }, [disabled, onToggleExpand]);
+
+  const selectedModel =
+    (selectedModelId ? models.find((model) => model.id === selectedModelId) : null) ?? null;
+  const selectedModelLabel =
+    selectedModel?.displayName || selectedModel?.model || models[0]?.displayName || models[0]?.model || "No models";
+  const selectedEffortLabel = selectedEffort || "Default";
 
   const handleMobileDictationClick = useCallback(() => {
     setMobileActionsOpen(false);
@@ -685,34 +783,115 @@ export function ComposerInput({
           >
             <Plus size={14} aria-hidden />
           </button>
-          <select
-            className="composer-toolbar-select composer-toolbar-select--model"
-            aria-label="Model"
-            value={selectedModelId ?? ""}
-            onChange={(event) => onSelectModel(event.target.value)}
-            disabled={disabled}
-          >
-            {models.length === 0 && <option value="">No models</option>}
-            {models.map((model) => (
-              <option key={model.id} value={model.id}>
-                {model.displayName || model.model}
-              </option>
-            ))}
-          </select>
-          <select
-            className="composer-toolbar-select composer-toolbar-select--effort"
-            aria-label="Thinking mode"
-            value={selectedEffort ?? ""}
-            onChange={(event) => onSelectEffort(event.target.value)}
-            disabled={disabled || !reasoningSupported}
-          >
-            {reasoningOptions.length === 0 && <option value="">Default</option>}
-            {reasoningOptions.map((effort) => (
-              <option key={effort} value={effort}>
-                {effort}
-              </option>
-            ))}
-          </select>
+          <div className="composer-toolbar-menu" ref={modelMenuRef}>
+            <button
+              type="button"
+              className="composer-toolbar-select composer-toolbar-select--model"
+              aria-label="Model"
+              aria-haspopup="menu"
+              aria-expanded={modelMenuOpen}
+              onClick={() => {
+                setModelMenuOpen((prev) => !prev);
+                setEffortMenuOpen(false);
+              }}
+              disabled={disabled}
+            >
+              {selectedModelLabel}
+            </button>
+            {modelMenuOpen && (
+              <PopoverSurface
+                ref={modelDropdownRef}
+                className={`composer-toolbar-dropdown${modelMenuAbove ? " is-above" : ""}`}
+                role="menu"
+              >
+                {models.length === 0 ? (
+                  <div className="composer-toolbar-dropdown-empty">No models</div>
+                ) : (
+                  models.map((model) => (
+                    <PopoverMenuItem
+                      key={model.id}
+                      className="composer-toolbar-option"
+                      onClick={() => {
+                        onSelectModel(model.id);
+                        setModelMenuOpen(false);
+                      }}
+                      active={model.id === selectedModelId}
+                    >
+                      {model.displayName || model.model}
+                    </PopoverMenuItem>
+                  ))
+                )}
+              </PopoverSurface>
+            )}
+          </div>
+          <div className="composer-toolbar-menu" ref={effortMenuRef}>
+            <button
+              type="button"
+              className="composer-toolbar-select composer-toolbar-select--effort"
+              aria-label="Thinking mode"
+              aria-haspopup="menu"
+              aria-expanded={effortMenuOpen}
+              onClick={() => {
+                setEffortMenuOpen((prev) => !prev);
+                setModelMenuOpen(false);
+              }}
+              disabled={disabled || !reasoningSupported}
+            >
+              {selectedEffortLabel}
+            </button>
+            {effortMenuOpen && (
+              <PopoverSurface
+                ref={effortDropdownRef}
+                className={`composer-toolbar-dropdown${effortMenuAbove ? " is-above" : ""}`}
+                role="menu"
+              >
+                {reasoningOptions.length === 0 ? (
+                  <PopoverMenuItem
+                    className="composer-toolbar-option"
+                    onClick={() => {
+                      onSelectEffort("");
+                      setEffortMenuOpen(false);
+                    }}
+                    active={!selectedEffort}
+                  >
+                    Default
+                  </PopoverMenuItem>
+                ) : (
+                  reasoningOptions.map((effort) => (
+                    <PopoverMenuItem
+                      key={effort}
+                      className="composer-toolbar-option"
+                      onClick={() => {
+                        onSelectEffort(effort);
+                        setEffortMenuOpen(false);
+                      }}
+                      active={effort === selectedEffort}
+                    >
+                      {effort}
+                    </PopoverMenuItem>
+                  ))
+                )}
+              </PopoverSurface>
+            )}
+          </div>
+          {showPlanToggle && (
+            <>
+              <span className="composer-toolbar-separator" aria-hidden />
+              <button
+                type="button"
+                className={`composer-toolbar-plan-toggle${
+                  planSelected ? " is-active" : ""
+                }`}
+                onClick={() => onTogglePlanMode?.(!planSelected)}
+                disabled={disabled || !onTogglePlanMode}
+                aria-pressed={planSelected}
+                aria-label="Plan mode"
+              >
+                <ScrollText size={13} aria-hidden />
+                <span>{planLabel}</span>
+              </button>
+            </>
+          )}
         </div>
         <div className="composer-input-toolbar-right">
           <button

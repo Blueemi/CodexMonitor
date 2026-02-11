@@ -95,6 +95,22 @@ export function useComposerShortcuts({
         matchesShortcut(event, collaborationShortcut)
       ) {
         event.preventDefault();
+        const planMode = collaborationModes.find((mode) => mode.id === "plan") ?? null;
+        const defaultMode =
+          collaborationModes.find((mode) => mode.id === "default") ?? null;
+        const canTogglePlan =
+          Boolean(planMode) &&
+          collaborationModes.every(
+            (mode) => mode.id === "default" || mode.id === "plan",
+          );
+        if (canTogglePlan) {
+          const nextModeId =
+            selectedCollaborationModeId === (planMode?.id ?? "plan")
+              ? (defaultMode?.id ?? null)
+              : (planMode?.id ?? "plan");
+          onSelectCollaborationMode(nextModeId);
+          return;
+        }
         const currentIndex = collaborationModes.findIndex(
           (mode) => mode.id === selectedCollaborationModeId,
         );

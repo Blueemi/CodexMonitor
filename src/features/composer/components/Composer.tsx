@@ -273,6 +273,23 @@ export const Composer = memo(function Composer({
   const reviewPromptOpen = Boolean(reviewPrompt);
   const suggestionsOpen = reviewPromptOpen || isAutocompleteOpen;
   const suggestions = reviewPromptOpen ? [] : autocompleteMatches;
+  const planMode = collaborationModes.find((mode) => mode.id === "plan") ?? null;
+  const defaultMode = collaborationModes.find((mode) => mode.id === "default") ?? null;
+  const canUsePlanToggle =
+    Boolean(planMode) &&
+    collaborationModes.every((mode) => mode.id === "default" || mode.id === "plan");
+  const planModeId = planMode?.id ?? "plan";
+  const defaultModeId = defaultMode?.id ?? null;
+  const planSelected = selectedCollaborationModeId === planModeId;
+  const shouldShowPlanToggle =
+    canUsePlanToggle && (planSelected || /\bplan\b/i.test(text));
+
+  const handlePlanToggle = useCallback(
+    (enabled: boolean) => {
+      onSelectCollaborationMode(enabled ? planModeId : defaultModeId);
+    },
+    [defaultModeId, onSelectCollaborationMode, planModeId],
+  );
 
   useLayoutEffect(() => {
     if (!isAutocompleteOpen) {
@@ -701,6 +718,10 @@ export const Composer = memo(function Composer({
         selectedEffort={selectedEffort}
         onSelectEffort={onSelectEffort}
         reasoningSupported={reasoningSupported}
+        showPlanToggle={shouldShowPlanToggle}
+        planLabel={planMode?.label || "Plan"}
+        planSelected={planSelected}
+        onTogglePlanMode={handlePlanToggle}
         reviewPrompt={reviewPrompt}
         onReviewPromptClose={onReviewPromptClose}
         onReviewPromptShowPreset={onReviewPromptShowPreset}
@@ -725,6 +746,7 @@ export const Composer = memo(function Composer({
         collaborationModes={collaborationModes}
         selectedCollaborationModeId={selectedCollaborationModeId}
         onSelectCollaborationMode={onSelectCollaborationMode}
+        showCollaborationSelector={!canUsePlanToggle}
         accessMode={accessMode}
         onSelectAccessMode={onSelectAccessMode}
         contextUsage={contextUsage}

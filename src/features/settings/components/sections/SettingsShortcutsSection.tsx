@@ -107,7 +107,7 @@ export function SettingsShortcutsSection({
     },
     {
       title: "Composer",
-      subtitle: "Cycle between model, access, reasoning, and collaboration modes.",
+      subtitle: "Cycle model/access/thinking and toggle plan mode.",
       items: [
         {
           label: "Cycle model",
@@ -128,10 +128,10 @@ export function SettingsShortcutsSection({
           help: `Default: ${formatShortcut("cmd+shift+r")}`,
         },
         {
-          label: "Cycle collaboration mode",
+          label: "Toggle plan mode",
           draftKey: "collaboration",
           settingKey: "composerCollaborationShortcut",
-          help: `Default: ${formatShortcut("shift+tab")}`,
+          help: `Default: ${formatShortcut(isMac ? "cmd+shift+p" : "ctrl+shift+p")}`,
         },
         {
           label: "Stop active run",
@@ -149,7 +149,7 @@ export function SettingsShortcutsSection({
           label: "Toggle projects sidebar",
           draftKey: "projectsSidebar",
           settingKey: "toggleProjectsSidebarShortcut",
-          help: `Default: ${formatShortcut("cmd+shift+p")}`,
+          help: `Default: ${formatShortcut(isMac ? "cmd+shift+o" : "ctrl+shift+o")}`,
         },
         {
           label: "Toggle git sidebar",

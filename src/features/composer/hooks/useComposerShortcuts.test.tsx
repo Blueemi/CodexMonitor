@@ -36,11 +36,11 @@ function ShortcutHarness(props: {
 }
 
 describe("useComposerShortcuts", () => {
-  it("cycles collaboration mode on shift+tab while focused", () => {
+  it("toggles plan mode on cmd/ctrl+shift+p while focused", () => {
     const onSelectCollaborationMode = vi.fn();
     const { getByLabelText } = render(
       <ShortcutHarness
-        collaborationShortcut="shift+tab"
+        collaborationShortcut="cmd+shift+p"
         collaborationModes={[
           { id: "default", label: "Default" },
           { id: "plan", label: "Plan" },
@@ -55,7 +55,8 @@ describe("useComposerShortcuts", () => {
     expect(document.activeElement).toBe(textarea);
 
     const event = new KeyboardEvent("keydown", {
-      key: "Tab",
+      key: "p",
+      ctrlKey: true,
       shiftKey: true,
       bubbles: true,
       cancelable: true,
@@ -69,7 +70,7 @@ describe("useComposerShortcuts", () => {
     const onSelectCollaborationMode = vi.fn();
     render(
       <ShortcutHarness
-        collaborationShortcut="shift+tab"
+        collaborationShortcut="cmd+shift+p"
         collaborationModes={[
           { id: "default", label: "Default" },
           { id: "plan", label: "Plan" },
@@ -80,7 +81,8 @@ describe("useComposerShortcuts", () => {
     );
 
     const event = new KeyboardEvent("keydown", {
-      key: "Tab",
+      key: "p",
+      ctrlKey: true,
       shiftKey: true,
       bubbles: true,
       cancelable: true,

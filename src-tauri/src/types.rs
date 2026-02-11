@@ -804,7 +804,12 @@ fn default_interrupt_shortcut() -> Option<String> {
 }
 
 fn default_composer_collaboration_shortcut() -> Option<String> {
-    Some("shift+tab".to_string())
+    let value = if cfg!(target_os = "macos") {
+        "cmd+shift+p"
+    } else {
+        "ctrl+shift+p"
+    };
+    Some(value.to_string())
 }
 
 fn default_new_agent_shortcut() -> Option<String> {
@@ -845,9 +850,9 @@ fn default_archive_thread_shortcut() -> Option<String> {
 
 fn default_toggle_projects_sidebar_shortcut() -> Option<String> {
     let value = if cfg!(target_os = "macos") {
-        "cmd+shift+p"
+        "cmd+shift+o"
     } else {
-        "ctrl+shift+p"
+        "ctrl+shift+o"
     };
     Some(value.to_string())
 }
@@ -1259,6 +1264,8 @@ mod tests {
         let expected_model = format!("{expected_primary}+shift+m");
         let expected_access = format!("{expected_primary}+shift+a");
         let expected_reasoning = format!("{expected_primary}+shift+r");
+        let expected_collaboration = format!("{expected_primary}+shift+p");
+        let expected_projects_sidebar = format!("{expected_primary}+shift+o");
         let expected_toggle_debug = format!("{expected_primary}+shift+d");
         let expected_toggle_terminal = format!("{expected_primary}+shift+t");
         assert_eq!(
@@ -1275,7 +1282,7 @@ mod tests {
         );
         assert_eq!(
             settings.composer_collaboration_shortcut.as_deref(),
-            Some("shift+tab")
+            Some(expected_collaboration.as_str())
         );
         let expected_interrupt = if cfg!(target_os = "macos") {
             "ctrl+c"
@@ -1293,6 +1300,10 @@ mod tests {
             } else {
                 "ctrl+alt+a"
             })
+        );
+        assert_eq!(
+            settings.toggle_projects_sidebar_shortcut.as_deref(),
+            Some(expected_projects_sidebar.as_str())
         );
         assert_eq!(
             settings.toggle_debug_panel_shortcut.as_deref(),

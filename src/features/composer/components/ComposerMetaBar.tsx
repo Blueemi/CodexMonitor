@@ -1,11 +1,25 @@
-import type { CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type RefObject,
+} from "react";
 import type { AccessMode, ThreadTokenUsage } from "../../../types";
+import { useDismissibleMenu } from "../../app/hooks/useDismissibleMenu";
+import {
+  PopoverMenuItem,
+  PopoverSurface,
+} from "../../design-system/components/popover/PopoverPrimitives";
 
 type ComposerMetaBarProps = {
   disabled: boolean;
   collaborationModes: { id: string; label: string }[];
   selectedCollaborationModeId: string | null;
   onSelectCollaborationMode: (id: string | null) => void;
+  showCollaborationSelector?: boolean;
   accessMode: AccessMode;
   onSelectAccessMode: (mode: AccessMode) => void;
   contextUsage?: ThreadTokenUsage | null;
@@ -16,10 +30,99 @@ export function ComposerMetaBar({
   collaborationModes,
   selectedCollaborationModeId,
   onSelectCollaborationMode,
+  showCollaborationSelector = true,
   accessMode,
   onSelectAccessMode,
   contextUsage = null,
 }: ComposerMetaBarProps) {
+  const [collaborationMenuOpen, setCollaborationMenuOpen] = useState(false);
+  const [accessMenuOpen, setAccessMenuOpen] = useState(false);
+  const [collaborationMenuAbove, setCollaborationMenuAbove] = useState(false);
+  const [accessMenuAbove, setAccessMenuAbove] = useState(false);
+  const collaborationMenuRef = useRef<HTMLDivElement | null>(null);
+  const accessMenuRef = useRef<HTMLDivElement | null>(null);
+  const collaborationDropdownRef = useRef<HTMLDivElement | null>(null);
+  const accessDropdownRef = useRef<HTMLDivElement | null>(null);
+
+  useDismissibleMenu({
+    isOpen: collaborationMenuOpen,
+    containerRef: collaborationMenuRef,
+    onClose: () => setCollaborationMenuOpen(false),
+  });
+
+  useDismissibleMenu({
+    isOpen: accessMenuOpen,
+    containerRef: accessMenuRef,
+    onClose: () => setAccessMenuOpen(false),
+  });
+
+  useEffect(() => {
+    if (!disabled) {
+      return;
+    }
+    setCollaborationMenuOpen(false);
+    setAccessMenuOpen(false);
+  }, [disabled]);
+
+  const updateMenuPlacement = useCallback(
+    (
+      containerRef: RefObject<HTMLDivElement | null>,
+      dropdownRef: RefObject<HTMLDivElement | null>,
+      setAbove: (above: boolean) => void,
+    ) => {
+      const containerRect = containerRef.current?.getBoundingClientRect();
+      const dropdownRect = dropdownRef.current?.getBoundingClientRect();
+      if (!containerRect || !dropdownRect) {
+        setAbove(false);
+        return;
+      }
+      const gap = 8;
+      const viewportPadding = 8;
+      const spaceBelow = window.innerHeight - containerRect.bottom - viewportPadding;
+      const spaceAbove = containerRect.top - viewportPadding;
+      const shouldOpenAbove =
+        spaceBelow < dropdownRect.height + gap && spaceAbove > spaceBelow;
+      setAbove(shouldOpenAbove);
+    },
+    [],
+  );
+
+  useLayoutEffect(() => {
+    if (!collaborationMenuOpen) {
+      setCollaborationMenuAbove(false);
+      return;
+    }
+    const update = () =>
+      updateMenuPlacement(
+        collaborationMenuRef,
+        collaborationDropdownRef,
+        setCollaborationMenuAbove,
+      );
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [collaborationMenuOpen, updateMenuPlacement]);
+
+  useLayoutEffect(() => {
+    if (!accessMenuOpen) {
+      setAccessMenuAbove(false);
+      return;
+    }
+    const update = () =>
+      updateMenuPlacement(accessMenuRef, accessDropdownRef, setAccessMenuAbove);
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [accessMenuOpen, updateMenuPlacement]);
+
   const contextWindow = contextUsage?.modelContextWindow ?? null;
   const lastTokens = contextUsage?.last.totalTokens ?? 0;
   const totalTokens = contextUsage?.total.totalTokens ?? 0;
@@ -32,55 +135,23 @@ export function ComposerMetaBar({
             Math.min(Math.max((usedTokens / contextWindow) * 100, 0), 100),
         )
       : null;
-  const planMode =
-    collaborationModes.find((mode) => mode.id === "plan") ?? null;
-  const defaultMode =
-    collaborationModes.find((mode) => mode.id === "default") ?? null;
-  const canUsePlanToggle =
-    Boolean(planMode) &&
-    collaborationModes.every(
-      (mode) => mode.id === "default" || mode.id === "plan",
-    );
-  const planSelected = selectedCollaborationModeId === (planMode?.id ?? "");
+  const selectedCollaborationMode =
+    collaborationModes.find((mode) => mode.id === selectedCollaborationModeId) ?? null;
+  const selectedCollaborationLabel =
+    selectedCollaborationMode?.label || selectedCollaborationMode?.id || "Select mode";
+  const accessOptions: Array<{ id: AccessMode; label: string }> = [
+    { id: "read-only", label: "Read only" },
+    { id: "current", label: "On-Request" },
+    { id: "full-access", label: "Full access" },
+  ];
+  const selectedAccessLabel =
+    accessOptions.find((option) => option.id === accessMode)?.label ?? "Agent access";
 
   return (
     <div className="composer-bar">
       <div className="composer-meta">
-        {collaborationModes.length > 0 && (
-          canUsePlanToggle ? (
-            <div className="composer-select-wrap composer-plan-toggle-wrap">
-              <label className="composer-plan-toggle" aria-label="Plan mode">
-                <input
-                  className="composer-plan-toggle-input"
-                  type="checkbox"
-                  checked={planSelected}
-                  disabled={disabled}
-                  onChange={(event) =>
-                    onSelectCollaborationMode(
-                      event.target.checked
-                        ? planMode?.id ?? "plan"
-                        : (defaultMode?.id ?? null),
-                    )
-                  }
-                />
-                <span className="composer-plan-toggle-icon" aria-hidden>
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="m6.5 7.5 1 1 2-2M6.5 12.5l1 1 2-2M6.5 17.5l1 1 2-2M11 7.5h7M11 12.5h7M11 17.5h7"
-                      stroke="currentColor"
-                      strokeWidth="1.4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
-                <span className="composer-plan-toggle-label">
-                  {planMode?.label || "Plan"}
-                </span>
-              </label>
-            </div>
-          ) : (
-            <div className="composer-select-wrap">
+        {showCollaborationSelector && collaborationModes.length > 0 && (
+          <div className="composer-select-wrap composer-select-wrap--menu" ref={collaborationMenuRef}>
             <span className="composer-icon" aria-hidden>
               <svg viewBox="0 0 24 24" fill="none">
                 <path
@@ -92,26 +163,46 @@ export function ComposerMetaBar({
                 />
               </svg>
             </span>
-              <select
-                className="composer-select composer-select--model composer-select--collab"
-                aria-label="Collaboration mode"
-                value={selectedCollaborationModeId ?? ""}
-                onChange={(event) =>
-                  onSelectCollaborationMode(event.target.value || null)
-                }
-                disabled={disabled}
+            <button
+              type="button"
+              className="composer-select composer-select--model composer-select--collab"
+              aria-label="Collaboration mode"
+              aria-haspopup="menu"
+              aria-expanded={collaborationMenuOpen}
+              onClick={() => {
+                setCollaborationMenuOpen((prev) => !prev);
+                setAccessMenuOpen(false);
+              }}
+              disabled={disabled}
+            >
+              {selectedCollaborationLabel}
+            </button>
+            {collaborationMenuOpen && (
+              <PopoverSurface
+                ref={collaborationDropdownRef}
+                className={`composer-select-dropdown${collaborationMenuAbove ? " is-above" : ""}`}
+                role="menu"
               >
                 {collaborationModes.map((mode) => (
-                  <option key={mode.id} value={mode.id}>
+                  <PopoverMenuItem
+                    key={mode.id}
+                    className="composer-select-option"
+                    onClick={() => {
+                      onSelectCollaborationMode(mode.id || null);
+                      setCollaborationMenuOpen(false);
+                    }}
+                    active={mode.id === selectedCollaborationModeId}
+                  >
                     {mode.label || mode.id}
-                  </option>
+                  </PopoverMenuItem>
                 ))}
-              </select>
-            </div>
-          )
+              </PopoverSurface>
+            )}
+          </div>
         )}
         <div
-          className={`composer-select-wrap composer-select-wrap--access composer-select-wrap--access-${accessMode}`}
+          className={`composer-select-wrap composer-select-wrap--menu composer-select-wrap--access composer-select-wrap--access-${accessMode}`}
+          ref={accessMenuRef}
         >
           <span className="composer-icon" aria-hidden>
             <svg viewBox="0 0 24 24" fill="none">
@@ -130,19 +221,41 @@ export function ComposerMetaBar({
               />
             </svg>
           </span>
-          <select
+          <button
+            type="button"
             className="composer-select composer-select--approval"
             aria-label="Agent access"
+            aria-haspopup="menu"
+            aria-expanded={accessMenuOpen}
             disabled={disabled}
-            value={accessMode}
-            onChange={(event) =>
-              onSelectAccessMode(event.target.value as AccessMode)
-            }
+            onClick={() => {
+              setAccessMenuOpen((prev) => !prev);
+              setCollaborationMenuOpen(false);
+            }}
           >
-            <option value="read-only">Read only</option>
-            <option value="current">On-Request</option>
-            <option value="full-access">Full access</option>
-          </select>
+            {selectedAccessLabel}
+          </button>
+          {accessMenuOpen && (
+            <PopoverSurface
+              ref={accessDropdownRef}
+              className={`composer-select-dropdown${accessMenuAbove ? " is-above" : ""}`}
+              role="menu"
+            >
+              {accessOptions.map((option) => (
+                <PopoverMenuItem
+                  key={option.id}
+                  className="composer-select-option"
+                  onClick={() => {
+                    onSelectAccessMode(option.id);
+                    setAccessMenuOpen(false);
+                  }}
+                  active={option.id === accessMode}
+                >
+                  {option.label}
+                </PopoverMenuItem>
+              ))}
+            </PopoverSurface>
+          )}
         </div>
       </div>
       <div className="composer-context">

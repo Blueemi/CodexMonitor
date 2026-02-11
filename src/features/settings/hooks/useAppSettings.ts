@@ -45,13 +45,13 @@ function buildDefaultSettings(): AppSettings {
     composerModelShortcut: isMac ? "cmd+shift+m" : "ctrl+shift+m",
     composerAccessShortcut: isMac ? "cmd+shift+a" : "ctrl+shift+a",
     composerReasoningShortcut: isMac ? "cmd+shift+r" : "ctrl+shift+r",
-    composerCollaborationShortcut: "shift+tab",
+    composerCollaborationShortcut: isMac ? "cmd+shift+p" : "ctrl+shift+p",
     interruptShortcut: getDefaultInterruptShortcut(),
     newAgentShortcut: isMac ? "cmd+n" : "ctrl+n",
     newWorktreeAgentShortcut: isMac ? "cmd+shift+n" : "ctrl+shift+n",
     newCloneAgentShortcut: isMac ? "cmd+alt+n" : "ctrl+alt+n",
     archiveThreadShortcut: isMac ? "cmd+ctrl+a" : "ctrl+alt+a",
-    toggleProjectsSidebarShortcut: isMac ? "cmd+shift+p" : "ctrl+shift+p",
+    toggleProjectsSidebarShortcut: isMac ? "cmd+shift+o" : "ctrl+shift+o",
     toggleGitSidebarShortcut: isMac ? "cmd+shift+g" : "ctrl+shift+g",
     branchSwitcherShortcut: isMac ? "cmd+b" : "ctrl+b",
     toggleDebugPanelShortcut: isMac ? "cmd+shift+d" : "ctrl+shift+d",
@@ -101,6 +101,9 @@ function buildDefaultSettings(): AppSettings {
 }
 
 function normalizeAppSettings(settings: AppSettings): AppSettings {
+  const isMac = isMacPlatform();
+  const planShortcut = isMac ? "cmd+shift+p" : "ctrl+shift+p";
+  const projectsShortcut = isMac ? "cmd+shift+o" : "ctrl+shift+o";
   const normalizedTargets =
     settings.openAppTargets && settings.openAppTargets.length
       ? normalizeOpenAppTargets(settings.openAppTargets)
@@ -125,6 +128,25 @@ function normalizeAppSettings(settings: AppSettings): AppSettings {
     settings.commitMessagePrompt && settings.commitMessagePrompt.trim().length > 0
       ? settings.commitMessagePrompt
       : DEFAULT_COMMIT_MESSAGE_PROMPT;
+  let composerCollaborationShortcut = settings.composerCollaborationShortcut;
+  let toggleProjectsSidebarShortcut = settings.toggleProjectsSidebarShortcut;
+  if ((composerCollaborationShortcut ?? "").toLowerCase() === "shift+tab") {
+    composerCollaborationShortcut = planShortcut;
+  }
+  const normalizedCollaborationShortcut =
+    composerCollaborationShortcut?.toLowerCase() ?? null;
+  const normalizedProjectsSidebarShortcut =
+    toggleProjectsSidebarShortcut?.toLowerCase() ?? null;
+  const isLegacyProjectsShortcut =
+    normalizedProjectsSidebarShortcut === "cmd+shift+p" ||
+    normalizedProjectsSidebarShortcut === "ctrl+shift+p";
+  if (
+    isLegacyProjectsShortcut ||
+    (normalizedProjectsSidebarShortcut !== null &&
+      normalizedProjectsSidebarShortcut === normalizedCollaborationShortcut)
+  ) {
+    toggleProjectsSidebarShortcut = projectsShortcut;
+  }
   return {
     ...settings,
     codexBin: settings.codexBin?.trim() ? settings.codexBin.trim() : null,
@@ -146,6 +168,8 @@ function normalizeAppSettings(settings: AppSettings): AppSettings {
     reviewDeliveryMode:
       settings.reviewDeliveryMode === "detached" ? "detached" : "inline",
     commitMessagePrompt,
+    composerCollaborationShortcut,
+    toggleProjectsSidebarShortcut,
     openAppTargets: normalizedTargets,
     selectedOpenAppId,
   };
