@@ -103,6 +103,7 @@ export type ThreadSummary = {
   id: string;
   name: string;
   updatedAt: number;
+  diffStats?: { additions: number; deletions: number };
 };
 
 export type ThreadListSortKey = "created_at" | "updated_at";

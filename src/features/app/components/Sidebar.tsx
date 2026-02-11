@@ -12,13 +12,11 @@ import { FolderOpen } from "lucide-react";
 import Copy from "lucide-react/dist/esm/icons/copy";
 import GitBranch from "lucide-react/dist/esm/icons/git-branch";
 import Plus from "lucide-react/dist/esm/icons/plus";
-import X from "lucide-react/dist/esm/icons/x";
+import Settings from "lucide-react/dist/esm/icons/settings";
 import {
   PopoverMenuItem,
   PopoverSurface,
 } from "../../design-system/components/popover/PopoverPrimitives";
-import { SidebarCornerActions } from "./SidebarCornerActions";
-import { SidebarFooter } from "./SidebarFooter";
 import { SidebarHeader } from "./SidebarHeader";
 import { ThreadList } from "./ThreadList";
 import { ThreadLoading } from "./ThreadLoading";
@@ -32,7 +30,6 @@ import { useSidebarScrollFade } from "../hooks/useSidebarScrollFade";
 import { useThreadRows } from "../hooks/useThreadRows";
 import { useDismissibleMenu } from "../hooks/useDismissibleMenu";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
-import { getUsageLabels } from "../utils/usageLabels";
 import { formatRelativeTimeShort } from "../../../utils/time";
 
 const COLLAPSED_GROUPS_STORAGE_KEY = "codexmonitor.collapsedGroups";
@@ -119,20 +116,20 @@ export const Sidebar = memo(function Sidebar({
   threadListCursorByWorkspace,
   threadListSortKey,
   onSetThreadListSortKey,
-  onRefreshAllThreads,
+  onRefreshAllThreads: _onRefreshAllThreads,
   activeWorkspaceId,
   activeThreadId,
-  accountRateLimits,
-  usageShowRemaining,
-  accountInfo,
-  onSwitchAccount,
-  onCancelSwitchAccount,
-  accountSwitching,
+  accountRateLimits: _accountRateLimits,
+  usageShowRemaining: _usageShowRemaining,
+  accountInfo: _accountInfo,
+  onSwitchAccount: _onSwitchAccount,
+  onCancelSwitchAccount: _onCancelSwitchAccount,
+  accountSwitching: _accountSwitching,
   onOpenSettings,
-  onOpenDebug,
-  showDebugButton,
+  onOpenDebug: _onOpenDebug,
+  showDebugButton: _showDebugButton,
   onAddWorkspace,
-  onSelectHome,
+  onSelectHome: _onSelectHome,
   onSelectWorkspace,
   onConnectWorkspace,
   onAddAgent,
@@ -162,8 +159,7 @@ export const Sidebar = memo(function Sidebar({
   const [expandedWorkspaces, setExpandedWorkspaces] = useState(
     new Set<string>(),
   );
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery] = useState("");
   const [addMenuAnchor, setAddMenuAnchor] = useState<{
     workspaceId: string;
     top: number;
@@ -187,14 +183,6 @@ export const Sidebar = memo(function Sidebar({
       onDeleteWorkspace,
       onDeleteWorktree,
     });
-  const {
-    sessionPercent,
-    weeklyPercent,
-    sessionResetLabel,
-    weeklyResetLabel,
-    creditsLabel,
-    showWeekly,
-  } = getUsageLabels(accountRateLimits, usageShowRemaining);
   const debouncedQuery = useDebouncedValue(searchQuery, 150);
   const normalizedQuery = debouncedQuery.trim().toLowerCase();
 
@@ -240,20 +228,6 @@ export const Sidebar = memo(function Sidebar({
     [normalizedQuery],
   );
 
-  const accountEmail = accountInfo?.email?.trim() ?? "";
-  const accountButtonLabel = accountEmail
-    ? accountEmail
-    : accountInfo?.type === "apikey"
-      ? "API key"
-      : "Sign in to Codex";
-  const accountActionLabel = accountEmail ? "Switch account" : "Sign in";
-  const showAccountSwitcher = Boolean(activeWorkspaceId);
-  const accountSwitchDisabled = accountSwitching || !activeWorkspaceId;
-  const accountCancelDisabled = !accountSwitching || !activeWorkspaceId;
-  const refreshDisabled = workspaces.length === 0 || workspaces.every((workspace) => !workspace.connected);
-  const refreshInProgress = workspaces.some(
-    (workspace) => threadListLoadingByWorkspace[workspace.id] ?? false,
-  );
 
   const pinnedThreadRows = useMemo(() => {
     type ThreadRow = { thread: ThreadSummary; depth: number };
@@ -399,15 +373,9 @@ export const Sidebar = memo(function Sidebar({
     };
   }, [addMenuAnchor]);
 
-  useEffect(() => {
-    if (!isSearchOpen && searchQuery) {
-      setSearchQuery("");
-    }
-  }, [isSearchOpen, searchQuery]);
-
   return (
     <aside
-      className={`sidebar${isSearchOpen ? " search-open" : ""}`}
+      className="sidebar"
       ref={workspaceDropTargetRef}
       onDragOver={onWorkspaceDragOver}
       onDragEnter={onWorkspaceDragEnter}
@@ -415,40 +383,10 @@ export const Sidebar = memo(function Sidebar({
       onDrop={onWorkspaceDrop}
     >
       <SidebarHeader
-        onSelectHome={onSelectHome}
         onAddWorkspace={onAddWorkspace}
-        onToggleSearch={() => setIsSearchOpen((prev) => !prev)}
-        isSearchOpen={isSearchOpen}
         threadListSortKey={threadListSortKey}
         onSetThreadListSortKey={onSetThreadListSortKey}
-        onRefreshAllThreads={onRefreshAllThreads}
-        refreshDisabled={refreshDisabled || refreshInProgress}
-        refreshInProgress={refreshInProgress}
       />
-      <div className={`sidebar-search${isSearchOpen ? " is-open" : ""}`}>
-        {isSearchOpen && (
-          <input
-            className="sidebar-search-input"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search projects"
-            aria-label="Search projects"
-            data-tauri-drag-region="false"
-            autoFocus
-          />
-        )}
-        {isSearchOpen && searchQuery.length > 0 && (
-          <button
-            type="button"
-            className="sidebar-search-clear"
-            onClick={() => setSearchQuery("")}
-            aria-label="Clear search"
-            data-tauri-drag-region="false"
-          >
-            <X size={12} aria-hidden />
-          </button>
-        )}
-      </div>
       <div
         className={`workspace-drop-overlay${
           isWorkspaceDropActive ? " is-active" : ""
@@ -685,27 +623,21 @@ export const Sidebar = memo(function Sidebar({
           )}
         </div>
       </div>
-      <SidebarFooter
-        sessionPercent={sessionPercent}
-        weeklyPercent={weeklyPercent}
-        sessionResetLabel={sessionResetLabel}
-        weeklyResetLabel={weeklyResetLabel}
-        creditsLabel={creditsLabel}
-        showWeekly={showWeekly}
-      />
-      <SidebarCornerActions
-        onOpenSettings={onOpenSettings}
-        onOpenDebug={onOpenDebug}
-        showDebugButton={showDebugButton}
-        showAccountSwitcher={showAccountSwitcher}
-        accountLabel={accountButtonLabel}
-        accountActionLabel={accountActionLabel}
-        accountDisabled={accountSwitchDisabled}
-        accountSwitching={accountSwitching}
-        accountCancelDisabled={accountCancelDisabled}
-        onSwitchAccount={onSwitchAccount}
-        onCancelSwitchAccount={onCancelSwitchAccount}
-      />
+      <div
+        className="sidebar-settings-row"
+        role="button"
+        tabIndex={0}
+        onClick={onOpenSettings}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onOpenSettings();
+          }
+        }}
+      >
+        <Settings size={16} aria-hidden />
+        <span>Settings</span>
+      </div>
     </aside>
   );
 });

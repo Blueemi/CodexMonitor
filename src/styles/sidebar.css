@@ -1,12 +1,12 @@
 .sidebar {
-  --sidebar-padding: 20px;
-  padding: 36px var(--sidebar-padding) 56px;
-  background: var(--surface-sidebar);
-  backdrop-filter: none;
-  border-right: 1px solid var(--border-subtle);
+  --sidebar-padding: 18px;
+  padding: 34px var(--sidebar-padding) 14px;
+  background: rgba(4, 4, 6, 0.58);
+  backdrop-filter: blur(28px) saturate(140%);
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   -webkit-app-region: no-drag;
   min-height: 0;
   overflow: hidden;
@@ -100,6 +100,39 @@
   min-width: 0;
 }
 
+.sidebar-header-title-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.sidebar-header-action-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.sidebar-header-action-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.sidebar-header-action-btn:hover,
+.sidebar-header-action-btn:focus-visible,
+.sidebar-header-action-btn.is-active {
+  color: var(--text-strong);
+  background: rgba(255, 255, 255, 0.08);
+  transform: none;
+  box-shadow: none;
+}
+
 .sidebar-title-group {
   display: inline-flex;
   align-items: center;
@@ -158,7 +191,7 @@
   height: 28px;
   padding: 0;
   border-radius: 8px;
-  border: none;
+  border: 1px solid transparent;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -174,7 +207,7 @@
 .sidebar-sort-toggle:focus-visible,
 .sidebar-sort-toggle.is-active {
   color: var(--text-strong);
-  background: var(--surface-hover);
+  background: rgba(255, 255, 255, 0.08);
   transform: none;
   box-shadow: none;
 }
@@ -227,7 +260,7 @@
   height: 28px;
   padding: 0;
   border-radius: 8px;
-  border: none;
+  border: 1px solid transparent;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -239,7 +272,7 @@
   height: 28px;
   padding: 0;
   border-radius: 8px;
-  border: none;
+  border: 1px solid transparent;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -258,7 +291,7 @@
 .sidebar-refresh-toggle:hover,
 .sidebar-refresh-toggle:focus-visible {
   color: var(--text-strong);
-  background: var(--surface-hover);
+  background: rgba(255, 255, 255, 0.08);
   transform: none;
   box-shadow: none;
 }
@@ -281,22 +314,21 @@
 .sidebar-search-toggle:hover,
 .sidebar-search-toggle:focus-visible {
   color: var(--text-strong);
-  background: var(--surface-hover);
+  background: rgba(255, 255, 255, 0.08);
   transform: none;
   box-shadow: none;
 }
 
 .sidebar-search-toggle.is-active {
   color: var(--text-strong);
-  background: var(--surface-hover);
-  box-shadow: inset 0 0 0 1px var(--border-quiet);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
 .sidebar-search {
-  position: sticky;
-  top: 0;
-  z-index: 4;
-  padding: 6px 4px 10px;
+  position: relative;
+  z-index: 2;
+  padding: 2px 2px 2px;
 }
 
 .sidebar.search-open .sidebar-header {
@@ -304,24 +336,25 @@
 }
 
 .sidebar.search-open {
-  gap: 12px;
+  gap: 8px;
 }
 
 .sidebar.search-open .sidebar-search {
-  padding: 6px 4px 8px;
+  padding: 2px;
 }
 
 .sidebar-search:not(.is-open) {
-  padding: 0 4px;
+  padding: 0 2px;
   height: 0;
   overflow: hidden;
 }
 
 .sidebar-search-input {
   width: 100%;
-  padding: 8px 28px 8px 12px;
+  padding: 9px 28px 9px 12px;
   border-radius: 10px;
-  border: 1px solid var(--border-quiet);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text-strong);
   font-size: 13px;
   outline: none;
@@ -390,6 +423,7 @@
 .sidebar-header .subtitle {
   margin-top: 0;
   line-height: 1.1;
+  font-weight: 500;
 }
 
 .subtitle-button {
@@ -414,7 +448,8 @@
   overflow-x: hidden;
   -webkit-app-region: no-drag;
   margin-right: calc(-1 * var(--sidebar-padding));
-  padding-right: calc(var(--sidebar-padding) - 12px);
+  padding-right: calc(var(--sidebar-padding) - 8px);
+  padding-bottom: 8px;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-size: 100% 100%;
@@ -471,8 +506,9 @@
 .workspace-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
   -webkit-app-region: no-drag;
+  padding-bottom: 6px;
 }
 
 .workspace-group {
@@ -482,7 +518,7 @@
 }
 
 .workspace-group + .workspace-group {
-  margin-top: 6px;
+  margin-top: 10px;
 }
 
 .workspace-group-header {
@@ -514,7 +550,7 @@
 .workspace-group-list {
   display: grid;
   grid-template-rows: 1fr;
-  margin-top: 8px;
+  margin-top: 10px;
   opacity: 1;
   transform: translateY(0);
   transition:
@@ -577,7 +613,7 @@
 .workspace-card {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   overflow-x: hidden;
 }
 
@@ -611,63 +647,44 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
-  padding: 8px 4px;
-  border-radius: 0;
+  padding: 2px 4px;
+  border-radius: 8px;
   border: none;
   background: transparent;
   color: inherit;
   text-align: left;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease;
   -webkit-app-region: no-drag;
   overflow-x: hidden;
-  position: relative;
-  isolation: isolate;
-}
-
-.workspace-row::before {
-  content: "";
-  position: absolute;
-  inset: 0 6px 0 0;
-  border-radius: 10px;
-  background: transparent;
-  transition: background 0.2s ease;
-  z-index: -1;
 }
 
 .workspace-row.active {
   background: transparent;
-  padding-left: 4px;
 }
 
 .workspace-row:hover {
-  background: transparent;
-}
-
-.workspace-row:hover::before {
-  background: var(--surface-card);
-}
-
-.workspace-row.active::before {
-  background: var(--surface-card);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .workspace-row.active .workspace-name {
   color: var(--text-strong);
 }
 
-.workspace-row.active .workspace-name-row {
-  padding-left: 6px;
-}
-
-
 .workspace-name {
-  font-weight: 600;
+  font-weight: 400;
   font-size: 14px;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.workspace-folder-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  flex-shrink: 0;
 }
 
 .workspace-name-match {
@@ -690,26 +707,26 @@
 }
 
 .workspace-add {
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
-  border: 1px solid var(--border-stronger);
-  background: var(--surface-card-muted);
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
   color: var(--text-muted);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1;
   -webkit-app-region: no-drag;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.15s ease, background 0.15s ease;
 }
 
 .workspace-add:hover {
   color: var(--text-strong);
-  background: var(--surface-card-strong);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .workspace-row:hover .workspace-add,
@@ -729,7 +746,7 @@
 .workspace-title {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -756,6 +773,7 @@
 .workspace-toggle-icon {
   display: inline-block;
   transition: transform 0.15s ease;
+  font-size: 11px;
 }
 
 .workspace-toggle.expanded .workspace-toggle-icon {
@@ -798,7 +816,7 @@
 .thread-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   margin-left: 0;
 }
 
@@ -806,11 +824,15 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 12px;
+  margin-bottom: 4px;
+}
+
+.pinned-section .workspace-group-header {
+  display: flex;
 }
 
 .thread-list-nested {
-  margin-left: 6px;
+  margin-left: 18px;
 }
 
 .thread-loading {
@@ -849,11 +871,13 @@
 .thread-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px 4px calc(6px + var(--thread-indent, 0px));
-  border-radius: 6px;
-  color: var(--text-quiet);
-  font-size: 12px;
+  gap: 8px;
+  padding: 8px 11px 8px calc(11px + var(--thread-indent, 0px));
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.2;
   text-align: left;
   cursor: pointer;
   -webkit-app-region: no-drag;
@@ -872,12 +896,12 @@
 }
 
 .thread-row:hover {
-  background: var(--surface-hover);
+  background: rgba(255, 255, 255, 0.07);
   color: var(--text-strong);
 }
 
 .thread-row.active {
-  background: var(--surface-card);
+  background: rgba(255, 255, 255, 0.12);
   color: var(--text-strong);
 }
 
@@ -897,9 +921,27 @@
 }
 
 .thread-time {
-  color: var(--text-faint);
-  font-size: 11px;
+  color: var(--text-subtle);
+  font-size: 13px;
+  font-weight: 400;
   white-space: nowrap;
+}
+
+.thread-diff-stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.thread-diff-add {
+  color: var(--status-success);
+}
+
+.thread-diff-del {
+  color: var(--status-error);
 }
 
 .thread-menu {
@@ -931,16 +973,19 @@
 .thread-more {
   border: none;
   background: transparent;
-  color: var(--text-faint);
-  font-size: 11px;
+  color: var(--text-accent);
+  font-size: 14px;
+  font-weight: 400;
   text-align: left;
-  padding: 2px 6px 2px 16px;
+  padding: 4px 11px;
   cursor: pointer;
   -webkit-app-region: no-drag;
+  opacity: 0.7;
 }
 
 .thread-more:hover {
-  color: var(--text-stronger);
+  opacity: 1;
+  color: var(--text-accent);
 }
 
 .thread-list-separator {
@@ -1285,6 +1330,30 @@
 .sidebar-account-cancel svg {
   width: 12px;
   height: 12px;
+}
+
+.sidebar-settings-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 4px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  border-top: 1px solid var(--border-muted);
+  flex-shrink: 0;
+}
+
+.sidebar-settings-row:hover {
+  color: var(--text-strong);
+}
+
+.sidebar-settings-row svg {
+  width: 16px;
+  height: 16px;
+  opacity: 0.6;
 }
 
 .sidebar-corner-actions {

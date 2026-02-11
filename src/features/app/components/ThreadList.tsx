@@ -102,6 +102,12 @@ export function ThreadList({
         {isPinned && <span className="thread-pin-icon" aria-label="Pinned">📌</span>}
         <span className="thread-name">{thread.name}</span>
         <div className="thread-meta">
+          {thread.diffStats && (
+            <span className="thread-diff-stats">
+              <span className="thread-diff-add">+{thread.diffStats.additions}</span>
+              <span className="thread-diff-del">-{thread.diffStats.deletions}</span>
+            </span>
+          )}
           {relativeTime && <span className="thread-time">{relativeTime}</span>}
           <div className="thread-menu">
             <div className="thread-menu-trigger" aria-hidden="true" />
@@ -126,7 +132,7 @@ export function ThreadList({
             onToggleExpanded(workspaceId);
           }}
         >
-          {isExpanded ? "Show less" : "More..."}
+          {isExpanded ? "Show less" : "Show more"}
         </button>
       )}
       {showLoadOlder && nextCursor && (isExpanded || totalThreadRoots <= 3) && (
