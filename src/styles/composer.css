@@ -5,7 +5,8 @@
   --composer-border-soft: color-mix(in srgb, var(--border-subtle) 84%, transparent);
   --composer-accent-warn: #ff9342;
   --composer-flat-bg: #1c1c1c;
-  --composer-flat-outline: #8e8e8e;
+  --composer-flat-outline: #2a2a2a;
+  --composer-flat-controls: #8e8e8e;
   --composer-flat-send: #fff;
   --composer-flat-send-icon: #282828;
   display: flex;
@@ -13,18 +14,8 @@
   gap: 10px;
   -webkit-app-region: no-drag;
   padding: 14px var(--main-panel-padding) 20px;
-  border-top: 1px solid color-mix(in srgb, var(--border-subtle) 78%, transparent);
-  background:
-    radial-gradient(
-      120% 90% at 50% 0%,
-      color-mix(in srgb, var(--surface-card) 32%, transparent) 0%,
-      transparent 70%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--surface-composer) 84%, transparent),
-      color-mix(in srgb, var(--surface-composer) 98%, transparent)
-    );
+  border-top: none;
+  background: transparent;
   grid-column: 1;
   grid-row: 3;
 }
@@ -136,7 +127,7 @@
   border-radius: 999px;
   border: 1px solid var(--composer-flat-outline);
   background: transparent;
-  color: var(--composer-flat-outline);
+  color: var(--composer-flat-controls);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -152,7 +143,7 @@
 .composer-toolbar-attach:hover {
   background: transparent;
   border-color: var(--composer-flat-outline);
-  color: var(--composer-flat-outline);
+  color: var(--composer-flat-controls);
 }
 
 .composer-toolbar-attach:disabled {
@@ -166,7 +157,7 @@
   -moz-appearance: none;
   border: none;
   background: transparent;
-  color: var(--composer-flat-outline);
+  color: var(--composer-flat-controls);
   font-size: 13px;
   line-height: 1.2;
   font-weight: 500;
@@ -192,17 +183,17 @@
 
 .composer-toolbar-select:hover:not(:disabled) {
   background-color: transparent;
-  color: var(--composer-flat-outline);
+  color: var(--composer-flat-controls);
 }
 
 .composer-toolbar-select:focus {
   outline: none;
-  color: var(--composer-flat-outline);
+  color: var(--composer-flat-controls);
 }
 
 .composer-toolbar-select:disabled {
   cursor: not-allowed;
-  color: var(--composer-flat-outline);
+  color: var(--composer-flat-controls);
   opacity: 0.5;
   background-image: none;
 }
@@ -225,7 +216,7 @@
 .composer-toolbar-plan-toggle {
   border: none;
   background: transparent;
-  color: var(--composer-flat-outline);
+  color: var(--composer-flat-controls);
   font-size: 13px;
   line-height: 1.2;
   font-weight: 500;
@@ -242,16 +233,16 @@
 
 .composer-toolbar-plan-toggle:hover:not(:disabled) {
   background-color: transparent;
-  color: var(--composer-flat-outline);
+  color: var(--composer-flat-controls);
 }
 
 .composer-toolbar-plan-toggle.is-active {
-  color: var(--composer-flat-outline);
+  color: var(--composer-flat-controls);
 }
 
 .composer-toolbar-plan-toggle:disabled {
   cursor: not-allowed;
-  color: var(--composer-flat-outline);
+  color: var(--composer-flat-controls);
   opacity: 0.5;
 }
 
@@ -635,6 +626,13 @@
   color: var(--text-fainter);
 }
 
+.composer-action.is-send:disabled {
+  opacity: 1;
+  border: 1px solid var(--composer-flat-send);
+  background: var(--composer-flat-send);
+  color: var(--composer-flat-send-icon);
+}
+
 .composer-action.is-disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -660,7 +658,7 @@
 
 .composer-select:disabled {
   cursor: not-allowed;
-  color: var(--composer-flat-outline);
+  color: var(--composer-flat-controls);
   opacity: 0.5;
   background-image: none;
 }
@@ -874,12 +872,12 @@
 
 .composer-select-wrap:hover .composer-icon,
 .composer-select-wrap:hover .composer-select {
-  color: var(--composer-flat-outline);
+  color: var(--composer-flat-controls);
 }
 
 .composer-select-wrap:hover .composer-plan-toggle-icon,
 .composer-select-wrap:hover .composer-plan-toggle-label {
-  color: var(--composer-flat-outline);
+  color: var(--composer-flat-controls);
 }
 
 .composer-select-wrap--menu {
@@ -932,7 +930,7 @@
   inline-size: 8px;
   block-size: 8px;
   border-radius: 999px;
-  background: var(--composer-flat-outline);
+  background: var(--composer-flat-controls);
   opacity: 0;
   transform: scale(0.55);
   transition:
@@ -945,7 +943,7 @@
   display: inline-flex;
   width: 15px;
   height: 15px;
-  color: var(--composer-flat-outline);
+  color: var(--composer-flat-controls);
   transition: color 0.18s ease;
 }
 
@@ -956,7 +954,7 @@
 
 .composer-plan-toggle-label {
   font-size: 12px;
-  color: var(--composer-flat-outline);
+  color: var(--composer-flat-controls);
   line-height: 1;
   transition: color 0.18s ease;
 }
@@ -974,7 +972,7 @@
 
 .composer-plan-toggle:has(.composer-plan-toggle-input:checked) .composer-plan-toggle-icon,
 .composer-plan-toggle:has(.composer-plan-toggle-input:checked) .composer-plan-toggle-label {
-  color: var(--composer-flat-outline);
+  color: var(--composer-flat-controls);
 }
 
 .composer-plan-toggle:has(.composer-plan-toggle-input:focus-visible) .composer-plan-toggle-indicator {
@@ -1003,7 +1001,7 @@
   display: inline-flex;
   width: 13px;
   height: 13px;
-  color: var(--composer-flat-outline);
+  color: var(--composer-flat-controls);
   transition: color 0.18s ease;
 }
 
@@ -1033,7 +1031,7 @@
   -moz-appearance: none;
   border: none;
   background: transparent;
-  color: var(--composer-flat-outline);
+  color: var(--composer-flat-controls);
   font-size: 12px;
   line-height: 1.15;
   font-weight: 500;
@@ -1103,17 +1101,21 @@
 
 .composer-select-wrap--access-full-access .composer-icon,
 .composer-select-wrap--access-full-access .composer-select {
-  color: var(--composer-flat-outline);
+  color: #fe8549;
 }
 
 .composer-select-wrap--access-full-access:hover .composer-icon,
 .composer-select-wrap--access-full-access:hover .composer-select {
-  color: var(--composer-flat-outline);
+  color: #fe8549;
+}
+
+.composer-select-wrap--access-full-access .composer-select:focus {
+  color: #fe8549;
 }
 
 .composer-select:focus {
   outline: none;
-  color: var(--composer-flat-outline);
+  color: var(--composer-flat-controls);
 }
 
 @media (max-width: 720px) {
