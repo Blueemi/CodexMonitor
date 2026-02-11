@@ -9,7 +9,7 @@ export function useGitPanelController({
   activeWorkspace,
   gitDiffPreloadEnabled,
   gitDiffIgnoreWhitespaceChanges,
-  splitChatDiffView,
+  splitChatDiffView = false,
   isCompact,
   isTablet,
   activeTab,
@@ -22,7 +22,7 @@ export function useGitPanelController({
   activeWorkspace: WorkspaceInfo | null;
   gitDiffPreloadEnabled: boolean;
   gitDiffIgnoreWhitespaceChanges: boolean;
-  splitChatDiffView: boolean;
+  splitChatDiffView?: boolean;
   isCompact: boolean;
   isTablet: boolean;
   activeTab: "home" | "projects" | "codex" | "git" | "log";

@@ -550,8 +550,15 @@ describe("useThreads UX integration", () => {
       await result.current.startReview("/review check this");
     });
 
-    expect(result.current.threadStatusById["thread-parent"]?.isReviewing).toBe(true);
-    expect(result.current.threadStatusById["thread-parent"]?.isProcessing).toBe(true);
+    expect(
+      result.current.activeItems.some(
+        (item) =>
+          item.kind === "message" &&
+          item.role === "assistant" &&
+          item.text.includes("Detached review started.") &&
+          item.text.includes("[Open review thread](/thread/thread-review-1)"),
+      ),
+    ).toBe(true);
 
     act(() => {
       handlers?.onItemCompleted?.("ws-1", "thread-review-1", {
@@ -567,6 +574,55 @@ describe("useThreads UX integration", () => {
         (item) =>
           item.kind === "message" &&
           item.role === "assistant" &&
+          item.text.includes("Detached review completed.") &&
+          item.text.includes("[Open review thread](/thread/thread-review-1)"),
+      ),
+    ).toBe(true);
+  });
+
+  it("preserves parent turn state when detached child exits", async () => {
+    vi.mocked(startReview).mockResolvedValue({
+      result: { reviewThreadId: "thread-review-1" },
+    });
+
+    const { result } = renderHook(() =>
+      useThreads({
+        activeWorkspace: workspace,
+        onWorkspaceConnected: vi.fn(),
+        reviewDeliveryMode: "detached",
+      }),
+    );
+
+    act(() => {
+      result.current.setActiveThreadId("thread-parent");
+    });
+
+    await act(async () => {
+      await result.current.startReview("/review check this");
+    });
+
+    act(() => {
+      handlers?.onTurnStarted?.("ws-1", "thread-parent", "turn-parent-1");
+    });
+
+    expect(result.current.threadStatusById["thread-parent"]?.isProcessing).toBe(true);
+    expect(result.current.activeTurnIdByThread["thread-parent"]).toBe("turn-parent-1");
+
+    act(() => {
+      handlers?.onItemCompleted?.("ws-1", "thread-review-1", {
+        type: "exitedReviewMode",
+        id: "review-exit-1",
+      });
+    });
+
+    expect(result.current.threadStatusById["thread-parent"]?.isProcessing).toBe(true);
+    expect(result.current.activeTurnIdByThread["thread-parent"]).toBe("turn-parent-1");
+    expect(
+      result.current.activeItems.some(
+        (item) =>
+          item.kind === "message" &&
+          item.role === "assistant" &&
+          item.text.includes("Detached review completed.") &&
           item.text.includes("[Open review thread](/thread/thread-review-1)"),
       ),
     ).toBe(true);
@@ -608,6 +664,7 @@ describe("useThreads UX integration", () => {
       (item) =>
         item.kind === "message" &&
         item.role === "assistant" &&
+        item.text.includes("Detached review completed.") &&
         item.text.includes("[Open review thread](/thread/thread-review-1)"),
     );
     expect(notices).toHaveLength(1);

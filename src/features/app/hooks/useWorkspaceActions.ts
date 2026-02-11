@@ -7,7 +7,7 @@ type Params = {
   isCompact: boolean;
   addWorkspace: () => Promise<WorkspaceInfo | null>;
   addWorkspaceFromPath: (path: string) => Promise<WorkspaceInfo | null>;
-  addWorkspacesFromPaths: (paths: string[]) => Promise<WorkspaceInfo | null>;
+  addWorkspacesFromPaths?: (paths: string[]) => Promise<WorkspaceInfo | null>;
   setActiveThreadId: (threadId: string | null, workspaceId: string) => void;
   setActiveTab: (tab: "home" | "projects" | "codex" | "git" | "log") => void;
   exitDiffView: () => void;
@@ -34,6 +34,22 @@ export function useWorkspaceActions({
   composerInputRef,
   onDebug,
 }: Params) {
+  const addWorkspacesFromPathsCompat = useCallback(
+    async (paths: string[]) => {
+      if (addWorkspacesFromPaths) {
+        return addWorkspacesFromPaths(paths);
+      }
+      for (const path of paths) {
+        const workspace = await addWorkspaceFromPath(path);
+        if (workspace) {
+          return workspace;
+        }
+      }
+      return null;
+    },
+    [addWorkspaceFromPath, addWorkspacesFromPaths],
+  );
+
   const handleWorkspaceAdded = useCallback(
     (workspace: WorkspaceInfo) => {
       setActiveThreadId(null, workspace.id);
@@ -66,7 +82,7 @@ export function useWorkspaceActions({
   const handleAddWorkspacesFromPaths = useCallback(
     async (paths: string[]) => {
       try {
-        const workspace = await addWorkspacesFromPaths(paths);
+        const workspace = await addWorkspacesFromPathsCompat(paths);
         if (workspace) {
           handleWorkspaceAdded(workspace);
         }
@@ -82,7 +98,7 @@ export function useWorkspaceActions({
         alert(`Failed to add workspaces.\n\n${message}`);
       }
     },
-    [addWorkspacesFromPaths, handleWorkspaceAdded, onDebug],
+    [addWorkspacesFromPathsCompat, handleWorkspaceAdded, onDebug],
   );
 
   const handleAddWorkspaceFromPath = useCallback(

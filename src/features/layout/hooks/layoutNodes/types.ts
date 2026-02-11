@@ -205,7 +205,7 @@ export type LayoutNodesOptions = {
   branchName: string;
   branches: BranchInfo[];
   onCheckoutBranch: (name: string) => Promise<void>;
-  onCheckoutPullRequest: (
+  onCheckoutPullRequest?: (
     pullRequest: GitHubPullRequest,
   ) => Promise<void> | void;
   onCreateBranch: (name: string) => Promise<void>;
@@ -281,15 +281,15 @@ export type LayoutNodesOptions = {
   selectedPullRequestComments: GitHubPullRequestComment[];
   selectedPullRequestCommentsLoading: boolean;
   selectedPullRequestCommentsError: string | null;
-  pullRequestReviewActions: PullRequestReviewAction[];
-  onRunPullRequestReview: (options: {
+  pullRequestReviewActions?: PullRequestReviewAction[];
+  onRunPullRequestReview?: (options: {
     intent: PullRequestReviewIntent;
     question?: string;
     selection?: PullRequestSelectionRange | null;
     images?: string[];
   }) => Promise<string | null>;
-  pullRequestReviewLaunching: boolean;
-  pullRequestReviewThreadId: string | null;
+  pullRequestReviewLaunching?: boolean;
+  pullRequestReviewThreadId?: string | null;
   onSelectPullRequest: (pullRequest: GitHubPullRequest) => void;
   gitRemoteUrl: string | null;
   gitRoot: string | null;
@@ -445,7 +445,7 @@ export type LayoutNodesOptions = {
   onDismissDictationError: () => void;
   dictationHint: string | null;
   onDismissDictationHint: () => void;
-  composerContextActions: ComposerContextAction[];
+  composerContextActions?: ComposerContextAction[];
   showComposer: boolean;
   composerSendLabel?: string;
   plan: TurnPlan | null;
