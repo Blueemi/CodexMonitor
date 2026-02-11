@@ -4,6 +4,10 @@
   --composer-border: color-mix(in srgb, var(--border-stronger) 56%, transparent);
   --composer-border-soft: color-mix(in srgb, var(--border-subtle) 84%, transparent);
   --composer-accent-warn: #ff9342;
+  --composer-flat-bg: #1c1c1c;
+  --composer-flat-outline: #8e8e8e;
+  --composer-flat-send: #fff;
+  --composer-flat-send-icon: #282828;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -85,16 +89,9 @@
   gap: 0;
   padding: 14px 16px 10px;
   border-radius: 20px;
-  border: 1px solid var(--composer-border);
-  background:
-    linear-gradient(
-      160deg,
-      color-mix(in srgb, var(--composer-shell) 90%, transparent),
-      color-mix(in srgb, var(--composer-shell-deep) 90%, transparent)
-    );
-  box-shadow:
-    0 18px 40px -34px rgba(0, 0, 0, 0.9),
-    inset 0 1px 0 color-mix(in srgb, var(--text-strong) 10%, transparent);
+  border: 1px solid var(--composer-flat-outline);
+  background: var(--composer-flat-bg);
+  box-shadow: none;
 }
 
 .composer-input-area {
@@ -137,9 +134,9 @@
   width: 28px;
   height: 28px;
   border-radius: 999px;
-  border: 1px solid var(--composer-border-soft);
+  border: 1px solid var(--composer-flat-outline);
   background: transparent;
-  color: var(--text-quiet);
+  color: var(--composer-flat-outline);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -153,9 +150,9 @@
 }
 
 .composer-toolbar-attach:hover {
-  background: color-mix(in srgb, var(--surface-control-hover) 60%, transparent);
-  border-color: color-mix(in srgb, var(--border-strong) 60%, transparent);
-  color: var(--text-emphasis);
+  background: transparent;
+  border-color: var(--composer-flat-outline);
+  color: var(--composer-flat-outline);
 }
 
 .composer-toolbar-attach:disabled {
@@ -169,7 +166,7 @@
   -moz-appearance: none;
   border: none;
   background: transparent;
-  color: var(--text-muted);
+  color: var(--composer-flat-outline);
   font-size: 13px;
   line-height: 1.2;
   font-weight: 500;
@@ -194,18 +191,19 @@
 }
 
 .composer-toolbar-select:hover:not(:disabled) {
-  background-color: color-mix(in srgb, var(--surface-control-hover) 55%, transparent);
-  color: var(--text-strong);
+  background-color: transparent;
+  color: var(--composer-flat-outline);
 }
 
 .composer-toolbar-select:focus {
   outline: none;
-  color: var(--text-strong);
+  color: var(--composer-flat-outline);
 }
 
 .composer-toolbar-select:disabled {
   cursor: not-allowed;
-  color: var(--text-fainter);
+  color: var(--composer-flat-outline);
+  opacity: 0.5;
   background-image: none;
 }
 
@@ -220,14 +218,14 @@
 .composer-toolbar-separator {
   width: 1px;
   height: 14px;
-  background: color-mix(in srgb, var(--border-strong) 70%, transparent);
+  background: var(--composer-flat-outline);
   margin: 0 2px 0 1px;
 }
 
 .composer-toolbar-plan-toggle {
   border: none;
   background: transparent;
-  color: var(--text-muted);
+  color: var(--composer-flat-outline);
   font-size: 13px;
   line-height: 1.2;
   font-weight: 500;
@@ -243,17 +241,18 @@
 }
 
 .composer-toolbar-plan-toggle:hover:not(:disabled) {
-  background-color: color-mix(in srgb, var(--surface-control-hover) 55%, transparent);
-  color: var(--text-strong);
+  background-color: transparent;
+  color: var(--composer-flat-outline);
 }
 
 .composer-toolbar-plan-toggle.is-active {
-  color: var(--message-link-color);
+  color: var(--composer-flat-outline);
 }
 
 .composer-toolbar-plan-toggle:disabled {
   cursor: not-allowed;
-  color: var(--text-fainter);
+  color: var(--composer-flat-outline);
+  opacity: 0.5;
 }
 
 .composer-toolbar-menu {
@@ -582,15 +581,15 @@
 .composer-action.is-send {
   width: 36px;
   height: 36px;
-  border-color: color-mix(in srgb, var(--text-muted) 30%, transparent);
-  background: color-mix(in srgb, var(--text-muted) 28%, transparent);
-  color: var(--text-emphasis);
+  border: 1px solid var(--composer-flat-send);
+  background: var(--composer-flat-send);
+  color: var(--composer-flat-send-icon);
   box-shadow: none;
 }
 
 .composer-action.is-send:hover {
-  background: color-mix(in srgb, var(--text-muted) 40%, transparent);
-  color: var(--text-emphasis);
+  background: var(--composer-flat-send);
+  color: var(--composer-flat-send-icon);
 }
 
 .composer-action.is-stop:hover {
@@ -661,7 +660,8 @@
 
 .composer-select:disabled {
   cursor: not-allowed;
-  color: var(--text-fainter);
+  color: var(--composer-flat-outline);
+  opacity: 0.5;
   background-image: none;
 }
 
@@ -874,12 +874,12 @@
 
 .composer-select-wrap:hover .composer-icon,
 .composer-select-wrap:hover .composer-select {
-  color: var(--text-strong);
+  color: var(--composer-flat-outline);
 }
 
 .composer-select-wrap:hover .composer-plan-toggle-icon,
 .composer-select-wrap:hover .composer-plan-toggle-label {
-  color: var(--text-strong);
+  color: var(--composer-flat-outline);
 }
 
 .composer-select-wrap--menu {
@@ -919,9 +919,9 @@
   inline-size: 14px;
   block-size: 14px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--border-strong) 62%, transparent);
-  background: color-mix(in srgb, var(--surface-control) 92%, transparent);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-strong) 8%, transparent);
+  border: 1px solid var(--composer-flat-outline);
+  background: transparent;
+  box-shadow: none;
   transition:
     border-color 0.18s ease,
     background-color 0.18s ease,
@@ -932,7 +932,7 @@
   inline-size: 8px;
   block-size: 8px;
   border-radius: 999px;
-  background: color-mix(in srgb, white 92%, var(--text-emphasis));
+  background: var(--composer-flat-outline);
   opacity: 0;
   transform: scale(0.55);
   transition:
@@ -945,7 +945,7 @@
   display: inline-flex;
   width: 15px;
   height: 15px;
-  color: var(--text-muted);
+  color: var(--composer-flat-outline);
   transition: color 0.18s ease;
 }
 
@@ -956,17 +956,15 @@
 
 .composer-plan-toggle-label {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--composer-flat-outline);
   line-height: 1;
   transition: color 0.18s ease;
 }
 
 .composer-plan-toggle:has(.composer-plan-toggle-input:checked) .composer-plan-toggle-indicator {
-  border-color: color-mix(in srgb, white 70%, var(--border-stronger));
-  background: color-mix(in srgb, white 22%, var(--surface-control));
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, white 26%, transparent),
-    0 0 0 1px color-mix(in srgb, white 16%, transparent);
+  border-color: var(--composer-flat-outline);
+  background: transparent;
+  box-shadow: none;
 }
 
 .composer-plan-toggle:has(.composer-plan-toggle-input:checked) .composer-plan-toggle-fill {
@@ -976,11 +974,11 @@
 
 .composer-plan-toggle:has(.composer-plan-toggle-input:checked) .composer-plan-toggle-icon,
 .composer-plan-toggle:has(.composer-plan-toggle-input:checked) .composer-plan-toggle-label {
-  color: var(--text-strong);
+  color: var(--composer-flat-outline);
 }
 
 .composer-plan-toggle:has(.composer-plan-toggle-input:focus-visible) .composer-plan-toggle-indicator {
-  outline: 2px solid color-mix(in srgb, white 50%, transparent);
+  outline: 2px solid var(--composer-flat-outline);
   outline-offset: 2px;
 }
 
@@ -1005,7 +1003,7 @@
   display: inline-flex;
   width: 13px;
   height: 13px;
-  color: var(--text-muted);
+  color: var(--composer-flat-outline);
   transition: color 0.18s ease;
 }
 
@@ -1035,7 +1033,7 @@
   -moz-appearance: none;
   border: none;
   background: transparent;
-  color: var(--text-muted);
+  color: var(--composer-flat-outline);
   font-size: 12px;
   line-height: 1.15;
   font-weight: 500;
@@ -1046,8 +1044,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  background-image: linear-gradient(45deg, transparent 50%, var(--select-caret) 50%),
-    linear-gradient(135deg, var(--select-caret) 50%, transparent 50%);
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
   background-position: calc(100% - 7px) calc(50% + 1px),
     calc(100% - 3px) calc(50% + 1px);
   background-size: 4px 4px, 4px 4px;
@@ -1105,17 +1103,17 @@
 
 .composer-select-wrap--access-full-access .composer-icon,
 .composer-select-wrap--access-full-access .composer-select {
-  color: var(--composer-accent-warn);
+  color: var(--composer-flat-outline);
 }
 
 .composer-select-wrap--access-full-access:hover .composer-icon,
 .composer-select-wrap--access-full-access:hover .composer-select {
-  color: var(--composer-accent-warn);
+  color: var(--composer-flat-outline);
 }
 
 .composer-select:focus {
   outline: none;
-  color: var(--text-strong);
+  color: var(--composer-flat-outline);
 }
 
 @media (max-width: 720px) {
