@@ -140,6 +140,7 @@ export type SettingsViewProps = {
   onRemoveDictationModel?: () => void;
   initialSection?: CodexSection;
   orbitServiceClient?: OrbitServiceClient;
+  displayMode?: "modal" | "inline";
 };
 
 export function SettingsView({
@@ -174,6 +175,7 @@ export function SettingsView({
   onRemoveDictationModel,
   initialSection,
   orbitServiceClient = ORBIT_SERVICES,
+  displayMode = "modal",
 }: SettingsViewProps) {
   const {
     activeSection,
@@ -1318,12 +1320,13 @@ export function SettingsView({
   const settingsBodyClassName = `settings-body${
     useMobileMasterDetail ? " settings-body-mobile-master-detail" : ""
   }${useMobileMasterDetail && showMobileDetail ? " is-detail-visible" : ""}`;
+  const inlineMode = displayMode === "inline";
 
   return (
     <ModalShell
-      className="settings-overlay"
-      cardClassName="settings-window"
-      onBackdropClick={onClose}
+      className={`settings-overlay${inlineMode ? " settings-overlay-inline" : ""}`}
+      cardClassName={`settings-window${inlineMode ? " settings-window-inline" : ""}`}
+      onBackdropClick={inlineMode ? undefined : onClose}
       ariaLabel="Settings"
     >
       <div className={settingsBodyClassName}>

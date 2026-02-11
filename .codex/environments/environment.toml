@@ -18,7 +18,4 @@ cd src-tauri && cargo check
 [[actions]]
 name = "Run"
 icon = "run"
-command = '''
-kill -9 $(lsof -ti tcp:1420)
-npm run tauri dev
-'''
+command = "sh -lc 'pkill -f \"[b]un tauri dev|[c]argo tauri dev\" 2>/dev/null || true; cd /Users/blueemi/Developer/CodexMonitor; nohup bun tauri dev >/tmp/codexmonitor-tauri-dev.log 2>&1 &'"

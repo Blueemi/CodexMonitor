@@ -2,6 +2,38 @@
   z-index: 45;
 }
 
+.settings-overlay-inline {
+  position: relative;
+  inset: auto;
+  z-index: 1;
+  grid-column: 1 / -1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.settings-overlay-inline .ds-modal-backdrop {
+  display: none;
+}
+
+.settings-overlay-inline .ds-modal-card.settings-window-inline {
+  position: relative;
+  top: 0;
+  left: 0;
+  transform: none;
+  width: 100%;
+  height: 100%;
+}
+
+.settings-window-inline {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.settings-window-inline .settings-body {
+  grid-template-columns: var(--sidebar-width, 280px) minmax(0, 1fr);
+}
+
 .settings-window {
   top: 0;
   left: 0;
@@ -15,7 +47,7 @@
   box-shadow: none;
   display: grid;
   grid-template-rows: minmax(0, 1fr);
-  background: #181818;
+  background: transparent;
   overflow: hidden;
 }
 
@@ -36,7 +68,7 @@
   display: flex;
   min-height: 0;
   border-right: 1px solid var(--border-subtle);
-  background: var(--surface-sidebar);
+  background: transparent;
 }
 
 .settings-master .settings-sidebar {
@@ -52,13 +84,12 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 18px 10px 12px;
+  padding: 56px 10px 12px;
   overflow-y: auto;
   background: var(--surface-sidebar);
   backdrop-filter: none;
 }
 
-.app.reduced-transparency .settings-master,
 .app.reduced-transparency .settings-sidebar {
   background: var(--surface-sidebar-opaque);
 }
@@ -159,7 +190,7 @@
 .settings-content {
   flex: 1;
   min-height: 0;
-  padding: 24px 30px;
+  padding: 56px 30px 30px;
   overflow-y: auto;
   background: #181818;
 }
@@ -968,7 +999,7 @@
   }
 
   .settings-master .settings-sidebar {
-    padding: 10px 12px 14px;
+    padding: 18px 12px 14px;
     gap: 8px;
   }
 
@@ -982,7 +1013,7 @@
   }
 
   .settings-content {
-    padding: 16px;
+    padding: 20px 16px 16px;
   }
 
   .settings-body.settings-body-mobile-master-detail .settings-detail {

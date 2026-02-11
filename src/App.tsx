@@ -88,7 +88,10 @@ import { useWorkspaceController } from "./features/app/hooks/useWorkspaceControl
 import { useWorkspaceSelection } from "./features/workspaces/hooks/useWorkspaceSelection";
 import { useLocalUsage } from "./features/home/hooks/useLocalUsage";
 import { useGitHubPanelController } from "./features/app/hooks/useGitHubPanelController";
-import { useSettingsModalState } from "./features/app/hooks/useSettingsModalState";
+import {
+  useSettingsModalState,
+  type SettingsSection,
+} from "./features/app/hooks/useSettingsModalState";
 import { usePersistComposerSettings } from "./features/app/hooks/usePersistComposerSettings";
 import { useSyncSelectedDiffPath } from "./features/app/hooks/useSyncSelectedDiffPath";
 import { useMenuAcceleratorController } from "./features/app/hooks/useMenuAcceleratorController";
@@ -111,10 +114,16 @@ import { MobileServerSetupWizard } from "./features/mobile/components/MobileServ
 import { useMobileServerSetup } from "./features/mobile/hooks/useMobileServerSetup";
 import { useWorkspaceHome } from "./features/workspaces/hooks/useWorkspaceHome";
 import { useWorkspaceAgentMd } from "./features/workspaces/hooks/useWorkspaceAgentMd";
+import {
+  SettingsView,
+  type SettingsViewProps,
+} from "./features/settings/components/SettingsView";
 import { isMobilePlatform } from "./utils/platformPaths";
 import type {
   AccessMode,
+  AppSettings,
   ComposerEditorSettings,
+  WorkspaceSettings,
   WorkspaceInfo,
 } from "./types";
 import { OPEN_APP_STORAGE_KEY } from "./features/app/constants";
@@ -132,12 +141,6 @@ import { useRemoteThreadRefreshOnFocus } from "./features/app/hooks/useRemoteThr
 const AboutView = lazy(() =>
   import("./features/about/components/AboutView").then((module) => ({
     default: module.AboutView,
-  })),
-);
-
-const SettingsView = lazy(() =>
-  import("./features/settings/components/SettingsView").then((module) => ({
-    default: module.SettingsView,
   })),
 );
 
@@ -290,6 +293,18 @@ function MainApp() {
     openSettings,
     closeSettings,
   } = useSettingsModalState();
+  const [leftPanelMode, setLeftPanelMode] = useState<"projects" | "settings">(
+    "projects",
+  );
+  const openSettingsPanel = useCallback((section?: SettingsSection) => {
+    setLeftPanelMode("settings");
+    openSettings(section);
+  }, [openSettings]);
+  const closeSettingsPanel = useCallback(() => {
+    setLeftPanelMode("projects");
+    closeSettings();
+  }, [closeSettings]);
+  const settingsInlineOpen = settingsOpen && leftPanelMode === "settings";
   const composerInputRef = useRef<HTMLTextAreaElement | null>(null);
   const workspaceHomeTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -1740,7 +1755,7 @@ function MainApp() {
     onAddCloneAgent: (workspace) => {
       void handleAddCloneAgent(workspace);
     },
-    onOpenSettings: () => openSettings(),
+    onOpenSettings: () => openSettingsPanel(),
     onCycleAgent: handleCycleAgent,
     onCycleWorkspace: handleCycleWorkspace,
     onToggleDebug: handleDebugClick,
@@ -1823,8 +1838,8 @@ function MainApp() {
     handleUserInputSubmit,
     onPlanAccept: handlePlanAccept,
     onPlanSubmitChanges: handlePlanSubmitChanges,
-    onOpenSettings: () => openSettings(),
-    onOpenDictationSettings: () => openSettings("dictation"),
+    onOpenSettings: () => openSettingsPanel(),
+    onOpenDictationSettings: () => openSettingsPanel("dictation"),
     onOpenDebug: handleDebugClick,
     showDebugButton,
     onAddWorkspace: handleAddWorkspace,
@@ -2252,7 +2267,7 @@ function MainApp() {
       dictationState={dictationState}
       dictationLevel={dictationLevel}
       onToggleDictation={handleToggleDictation}
-      onOpenDictationSettings={() => openSettings("dictation")}
+      onOpenDictationSettings={() => openSettingsPanel("dictation")}
       dictationError={dictationError}
       onDismissDictationError={clearDictationError}
       dictationHint={dictationHint}
@@ -2287,6 +2302,47 @@ function MainApp() {
   ) : (
     desktopTopbarLeftNode
   );
+  const settingsViewProps = {
+    workspaceGroups,
+    groupedWorkspaces,
+    ungroupedLabel,
+    onMoveWorkspace: handleMoveWorkspace,
+    onDeleteWorkspace: (workspaceId: string) => {
+      void removeWorkspace(workspaceId);
+    },
+    onCreateWorkspaceGroup: createWorkspaceGroup,
+    onRenameWorkspaceGroup: renameWorkspaceGroup,
+    onMoveWorkspaceGroup: moveWorkspaceGroup,
+    onDeleteWorkspaceGroup: deleteWorkspaceGroup,
+    onAssignWorkspaceGroup: assignWorkspaceGroup,
+    reduceTransparency,
+    onToggleTransparency: setReduceTransparency,
+    appSettings,
+    openAppIconById,
+    onUpdateAppSettings: async (next: AppSettings) => {
+      await queueSaveSettings(next);
+    },
+    onRunDoctor: doctor,
+    onRunCodexUpdate: codexUpdate,
+    onUpdateWorkspaceCodexBin: async (id: string, codexBin: string | null) => {
+      await updateWorkspaceCodexBin(id, codexBin);
+    },
+    onUpdateWorkspaceSettings: async (
+      id: string,
+      settings: Partial<WorkspaceSettings>,
+    ) => {
+      await updateWorkspaceSettings(id, settings);
+    },
+    scaleShortcutTitle,
+    scaleShortcutText,
+    onTestNotificationSound: handleTestNotificationSound,
+    onTestSystemNotification: handleTestSystemNotification,
+    onMobileConnectSuccess: handleMobileConnectSuccess,
+    dictationModelStatus: dictationModel.status,
+    onDownloadDictationModel: dictationModel.download,
+    onCancelDictationDownload: dictationModel.cancel,
+    onRemoveDictationModel: dictationModel.remove,
+  } satisfies Omit<SettingsViewProps, "initialSection" | "onClose">;
 
   return (
     <div
@@ -2325,41 +2381,50 @@ function MainApp() {
           />
         </Suspense>
       ) : null}
-      <AppLayout
-        isPhone={isPhone}
-        isTablet={isTablet}
-        showHome={showHome}
-        showGitDetail={showGitDetail}
-        activeTab={activeTab}
-        tabletTab={tabletTab}
-        centerMode={centerMode}
-        preloadGitDiffs={appSettings.preloadGitDiffs}
-        hasActivePlan={hasActivePlan}
-        activeWorkspace={Boolean(activeWorkspace)}
-        sidebarNode={sidebarNode}
-        messagesNode={mainMessagesNode}
-        composerNode={composerNode}
-        approvalToastsNode={approvalToastsNode}
-        updateToastNode={updateToastNode}
-        errorToastsNode={errorToastsNode}
-        homeNode={homeNode}
-        mainHeaderNode={mainHeaderNode}
-        desktopTopbarLeftNode={desktopTopbarLeftNodeWithToggle}
-        tabletNavNode={tabletNavNode}
-        tabBarNode={tabBarNode}
-        gitDiffPanelNode={gitDiffPanelNode}
-        gitDiffViewerNode={gitDiffViewerNode}
-        planPanelNode={planPanelNode}
-        debugPanelNode={debugPanelNode}
-        debugPanelFullNode={debugPanelFullNode}
-        terminalDockNode={terminalDockNode}
-        compactEmptyCodexNode={compactEmptyCodexNode}
-        compactEmptyGitNode={compactEmptyGitNode}
-        compactGitBackNode={compactGitBackNode}
-        onSidebarResizeStart={onSidebarResizeStart}
-        onRightPanelResizeStart={onRightPanelResizeStart}
-        onPlanPanelResizeStart={onPlanPanelResizeStart}
-      />
+      {settingsInlineOpen ? (
+        <SettingsView
+          {...settingsViewProps}
+          onClose={closeSettingsPanel}
+          initialSection={settingsSection ?? undefined}
+          displayMode="inline"
+        />
+      ) : (
+        <AppLayout
+          isPhone={isPhone}
+          isTablet={isTablet}
+          showHome={showHome}
+          showGitDetail={showGitDetail}
+          activeTab={activeTab}
+          tabletTab={tabletTab}
+          centerMode={centerMode}
+          preloadGitDiffs={appSettings.preloadGitDiffs}
+          hasActivePlan={hasActivePlan}
+          activeWorkspace={Boolean(activeWorkspace)}
+          sidebarNode={sidebarNode}
+          messagesNode={mainMessagesNode}
+          composerNode={composerNode}
+          approvalToastsNode={approvalToastsNode}
+          updateToastNode={updateToastNode}
+          errorToastsNode={errorToastsNode}
+          homeNode={homeNode}
+          mainHeaderNode={mainHeaderNode}
+          desktopTopbarLeftNode={desktopTopbarLeftNodeWithToggle}
+          tabletNavNode={tabletNavNode}
+          tabBarNode={tabBarNode}
+          gitDiffPanelNode={gitDiffPanelNode}
+          gitDiffViewerNode={gitDiffViewerNode}
+          planPanelNode={planPanelNode}
+          debugPanelNode={debugPanelNode}
+          debugPanelFullNode={debugPanelFullNode}
+          terminalDockNode={terminalDockNode}
+          compactEmptyCodexNode={compactEmptyCodexNode}
+          compactEmptyGitNode={compactEmptyGitNode}
+          compactGitBackNode={compactGitBackNode}
+          onSidebarResizeStart={onSidebarResizeStart}
+          onRightPanelResizeStart={onRightPanelResizeStart}
+          onPlanPanelResizeStart={onPlanPanelResizeStart}
+        />
+      )}
       <AppModals
         renamePrompt={renamePrompt}
         onRenamePromptChange={handleRenamePromptChange}
@@ -2386,48 +2451,11 @@ function MainApp() {
         currentBranch={currentBranch}
         onBranchSwitcherSelect={handleBranchSelect}
         onBranchSwitcherCancel={closeBranchSwitcher}
-        settingsOpen={settingsOpen}
-        settingsSection={settingsSection ?? undefined}
-        onCloseSettings={closeSettings}
+        settingsOpen={false}
+        settingsSection={null}
+        onCloseSettings={closeSettingsPanel}
         SettingsViewComponent={SettingsView}
-        settingsProps={{
-          workspaceGroups,
-          groupedWorkspaces,
-          ungroupedLabel,
-          onMoveWorkspace: handleMoveWorkspace,
-          onDeleteWorkspace: (workspaceId) => {
-            void removeWorkspace(workspaceId);
-          },
-          onCreateWorkspaceGroup: createWorkspaceGroup,
-          onRenameWorkspaceGroup: renameWorkspaceGroup,
-          onMoveWorkspaceGroup: moveWorkspaceGroup,
-          onDeleteWorkspaceGroup: deleteWorkspaceGroup,
-          onAssignWorkspaceGroup: assignWorkspaceGroup,
-          reduceTransparency,
-          onToggleTransparency: setReduceTransparency,
-          appSettings,
-          openAppIconById,
-          onUpdateAppSettings: async (next) => {
-            await queueSaveSettings(next);
-          },
-          onRunDoctor: doctor,
-          onRunCodexUpdate: codexUpdate,
-          onUpdateWorkspaceCodexBin: async (id, codexBin) => {
-            await updateWorkspaceCodexBin(id, codexBin);
-          },
-          onUpdateWorkspaceSettings: async (id, settings) => {
-            await updateWorkspaceSettings(id, settings);
-          },
-          scaleShortcutTitle,
-          scaleShortcutText,
-          onTestNotificationSound: handleTestNotificationSound,
-          onTestSystemNotification: handleTestSystemNotification,
-          onMobileConnectSuccess: handleMobileConnectSuccess,
-          dictationModelStatus: dictationModel.status,
-          onDownloadDictationModel: dictationModel.download,
-          onCancelDictationDownload: dictationModel.cancel,
-          onRemoveDictationModel: dictationModel.remove,
-        }}
+        settingsProps={settingsViewProps}
       />
       {showMobileSetupWizard && (
         <MobileServerSetupWizard {...mobileSetupWizardProps} />
