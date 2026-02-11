@@ -159,7 +159,7 @@
 .home-usage-toggle-button.is-active {
   background: var(--surface-card-strong);
   color: var(--text-stronger);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 1px var(--border-subtle);
 }
 
 .home-usage-refresh {
@@ -180,7 +180,6 @@
 
 .home-usage-refresh:hover {
   color: var(--text-stronger);
-  transform: translateY(-1px);
 }
 
 .home-usage-refresh.is-loading {
@@ -211,10 +210,9 @@
 .home-usage-card {
   padding: 12px 14px;
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(98, 176, 255, 0.15), transparent 60%),
-    var(--surface-card);
+  background: var(--surface-card);
   border: 1px solid var(--border-subtle);
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -267,11 +265,9 @@
 .home-usage-chart-card {
   padding: 12px 14px;
   border-radius: 16px;
-  background:
-    radial-gradient(circle at top, rgba(62, 156, 255, 0.16), transparent 60%),
-    var(--surface-card);
+  background: var(--surface-card);
   border: 1px solid var(--border-subtle);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .home-usage-chart {
@@ -296,8 +292,7 @@
   display: block;
   width: 100%;
   border-radius: 2px;
-  background: linear-gradient(180deg, rgba(99, 186, 255, 0.9), rgba(78, 132, 255, 0.65));
-  box-shadow: 0 6px 14px rgba(30, 100, 200, 0.25);
+  background: var(--text-accent);
 }
 
 .home-usage-bar::after {
@@ -454,11 +449,9 @@
   position: relative;
   padding: 14px 14px 16px;
   border-radius: 16px;
-  background:
-    linear-gradient(135deg, rgba(100, 200, 255, 0.12), transparent 60%),
-    var(--surface-card);
+  background: var(--surface-card);
   border: 1px solid var(--border-subtle);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   text-align: left;
 }
@@ -482,8 +475,7 @@
 }
 
 .home-latest-card-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .home-latest-card-button:focus-visible {

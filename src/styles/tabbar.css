@@ -59,7 +59,7 @@ html[data-mobile-composer-focus="true"] .app.layout-phone .tabbar {
   color: var(--text-strong);
   background: var(--surface-control-hover);
   border-color: var(--border-accent-soft);
-  box-shadow: 0 0 0 1px rgba(100, 200, 255, 0.2);
+  box-shadow: 0 0 0 1px rgba(10, 132, 255, 0.2);
 }
 
 .tabbar-label {

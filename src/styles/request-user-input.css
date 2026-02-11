@@ -76,8 +76,8 @@
 }
 
 .request-user-input-option.is-selected {
-  border-color: rgba(77, 163, 255, 0.7);
-  background: rgba(77, 163, 255, 0.12);
+  border-color: rgba(10, 132, 255, 0.6);
+  background: rgba(10, 132, 255, 0.12);
 }
 
 .request-user-input-option-label {
@@ -103,7 +103,7 @@
 }
 
 .request-user-input-notes:focus {
-  outline: 2px solid rgba(77, 163, 255, 0.35);
+  outline: 2px solid rgba(10, 132, 255, 0.35);
   outline-offset: 1px;
 }
 
@@ -119,8 +119,8 @@
 }
 
 .plan-ready-followup-change {
-  background: #0b0f1a;
-  color: #ffffff;
+  background: var(--surface-card-strong);
+  color: var(--text-strong);
   border: 1px solid var(--border-strong);
 }
 

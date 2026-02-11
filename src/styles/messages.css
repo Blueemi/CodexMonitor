@@ -287,7 +287,7 @@
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(10, 12, 16, 0.7);
+  background: rgba(0, 0, 0, 0.65);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -305,7 +305,7 @@
   max-width: 90vw;
   max-height: 90vh;
   border-radius: 16px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .message-image-lightbox-close {
@@ -981,7 +981,7 @@
   border-radius: 10px;
   background: var(--surface-command);
   overflow: hidden;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   margin: 6px 0;
 }
 
@@ -1044,7 +1044,7 @@
   font-size: var(--code-font-size, 11px);
   font-weight: var(--code-font-weight, 400);
   line-height: var(--code-line-height, 1.28);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .message .markdown-codeblock-single code {

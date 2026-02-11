@@ -67,11 +67,11 @@
 }
 
 .plan-step.inProgress .plan-step-status {
-  color: #86b7ff;
+  color: var(--text-accent);
 }
 
 .plan-step.completed .plan-step-status {
-  color: #47d488;
+  color: var(--status-success);
 }
 
 .plan-step-text {

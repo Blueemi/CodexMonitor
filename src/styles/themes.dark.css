@@ -13,55 +13,67 @@
   --code-font-size: 11px;
   --code-font-weight: 400;
   --code-line-height: 1.28;
-  --text-primary: #e6e7ea;
+
+  /* Text hierarchy — Apple-native warm whites */
+  --text-primary: rgba(255, 255, 255, 0.85);
   --text-strong: #ffffff;
-  --text-emphasis: rgba(255, 255, 255, 0.9);
+  --text-emphasis: rgba(255, 255, 255, 0.92);
   --text-stronger: rgba(255, 255, 255, 0.85);
-  --text-quiet: rgba(255, 255, 255, 0.75);
-  --text-muted: rgba(255, 255, 255, 0.7);
-  --text-subtle: rgba(255, 255, 255, 0.6);
-  --text-faint: rgba(255, 255, 255, 0.5);
-  --text-fainter: rgba(255, 255, 255, 0.45);
-  --text-dim: rgba(255, 255, 255, 0.35);
-  --surface-sidebar: rgba(18, 18, 18, 0.5);
-  --surface-sidebar-opaque: rgb(18, 18, 18);
-  --surface-topbar: rgba(10, 14, 20, 0.45);
-  --surface-right-panel: rgba(9, 12, 20, 0.4);
-  --surface-composer: rgba(10, 14, 20, 0.45);
-  --surface-messages: rgba(8, 10, 16, 0.45);
-  --surface-card: rgba(255, 255, 255, 0.04);
-  --surface-card-strong: rgba(255, 255, 255, 0.12);
-  --surface-card-muted: rgba(255, 255, 255, 0.06);
-  --surface-item: rgba(255, 255, 255, 0.02);
+  --text-quiet: rgba(255, 255, 255, 0.7);
+  --text-muted: rgba(255, 255, 255, 0.6);
+  --text-subtle: rgba(255, 255, 255, 0.5);
+  --text-faint: rgba(255, 255, 255, 0.4);
+  --text-fainter: rgba(255, 255, 255, 0.35);
+  --text-dim: rgba(255, 255, 255, 0.3);
+
+  /* Surfaces — warm neutral grays, no blue tint, transparent for Tauri vibrancy */
+  --surface-sidebar: rgba(28, 28, 30, 0.5);
+  --surface-sidebar-opaque: rgb(28, 28, 30);
+  --surface-topbar: rgba(28, 28, 30, 0.45);
+  --surface-right-panel: rgba(28, 28, 30, 0.4);
+  --surface-composer: rgba(28, 28, 30, 0.45);
+  --surface-messages: rgba(22, 22, 24, 0.45);
+  --surface-card: rgba(255, 255, 255, 0.05);
+  --surface-card-strong: rgba(255, 255, 255, 0.1);
+  --surface-card-muted: rgba(255, 255, 255, 0.04);
+  --surface-item: rgba(255, 255, 255, 0.03);
   --surface-control: rgba(255, 255, 255, 0.08);
-  --surface-control-hover: rgba(255, 255, 255, 0.14);
-  --surface-control-disabled: rgba(255, 255, 255, 0.05);
-  --surface-hover: rgba(255, 255, 255, 0.05);
-  --surface-active: rgba(100, 200, 255, 0.14);
-  --surface-approval: rgba(12, 16, 26, 0.6);
-  --surface-debug: rgba(10, 14, 20, 0.55);
-  --surface-command: rgba(10, 12, 18, 0.7);
-  --surface-diff-card: rgba(10, 14, 20, 0.32);
-  --surface-bubble: rgba(255, 255, 255, 0.12);
-  --surface-bubble-user: rgba(77, 153, 255, 0.45);
-  --surface-context-core: rgba(10, 14, 20, 0.9);
-  --surface-popover: rgba(10, 14, 20, 0.995);
-  --surface-review: rgba(255, 144, 200, 0.1);
-  --border-review: rgba(255, 144, 200, 0.35);
-  --surface-review-active: rgba(255, 144, 200, 0.18);
-  --text-review-active: rgba(255, 195, 226, 0.95);
-  --surface-review-done: rgba(120, 255, 200, 0.18);
-  --text-review-done: rgba(170, 255, 220, 0.95);
-  --border-subtle: rgba(255, 255, 255, 0.08);
+  --surface-control-hover: rgba(255, 255, 255, 0.12);
+  --surface-control-disabled: rgba(255, 255, 255, 0.04);
+  --surface-hover: rgba(255, 255, 255, 0.06);
+  --surface-active: rgba(10, 132, 255, 0.15);
+  --surface-approval: rgba(28, 28, 30, 0.6);
+  --surface-debug: rgba(28, 28, 30, 0.55);
+  --surface-command: rgba(22, 22, 24, 0.7);
+  --surface-diff-card: rgba(28, 28, 30, 0.32);
+  --surface-bubble: rgba(255, 255, 255, 0.08);
+  --surface-bubble-user: rgba(10, 132, 255, 0.22);
+  --surface-context-core: rgba(28, 28, 30, 0.92);
+  --surface-popover: rgba(30, 30, 32, 0.98);
+
+  /* Review surfaces — Apple systemPink / systemGreen */
+  --surface-review: rgba(255, 55, 95, 0.1);
+  --border-review: rgba(255, 55, 95, 0.3);
+  --surface-review-active: rgba(255, 55, 95, 0.16);
+  --text-review-active: rgba(255, 105, 140, 0.95);
+  --surface-review-done: rgba(48, 209, 88, 0.14);
+  --text-review-done: rgba(48, 209, 88, 0.95);
+
+  /* Borders — clean white-alpha, no color tint */
+  --border-subtle: rgba(255, 255, 255, 0.1);
   --border-muted: rgba(255, 255, 255, 0.06);
-  --border-strong: rgba(255, 255, 255, 0.14);
-  --border-stronger: rgba(255, 255, 255, 0.18);
-  --border-quiet: rgba(255, 255, 255, 0.2);
-  --border-accent: rgba(100, 200, 255, 0.6);
-  --border-accent-soft: rgba(100, 200, 255, 0.3);
-  --text-accent: rgba(164, 195, 255, 0.7);
-  --message-link-color: rgba(196, 154, 255, 0.96);
-  --shadow-accent: rgba(92, 168, 255, 0.28);
+  --border-strong: rgba(255, 255, 255, 0.15);
+  --border-stronger: rgba(255, 255, 255, 0.2);
+  --border-quiet: rgba(255, 255, 255, 0.12);
+
+  /* Accent — Apple system blue #0A84FF */
+  --border-accent: rgba(10, 132, 255, 0.55);
+  --border-accent-soft: rgba(10, 132, 255, 0.25);
+  --text-accent: rgba(10, 132, 255, 0.9);
+  --message-link-color: #0A84FF;
+  --shadow-accent: rgba(10, 132, 255, 0.15);
+
+  /* Titlebar */
   --titlebar-inset-left: 72px;
   --titlebar-height: 24px;
   --titlebar-toggle-size: 28px;
@@ -69,10 +81,13 @@
   --titlebar-toggle-title-offset: -6px;
   --titlebar-toggle-side-gap: 12px;
   --topbar-compact-padding: 16px;
-  --status-success: rgba(120, 235, 190, 0.95);
-  --status-warning: rgba(255, 175, 85, 0.95);
-  --status-error: rgba(255, 110, 110, 0.95);
+
+  /* Status — Apple system colors */
+  --status-success: #30D158;
+  --status-warning: #FF9F0A;
+  --status-error: #FF453A;
   --status-unknown: rgba(255, 255, 255, 0.3);
+
   --select-caret: rgba(255, 255, 255, 0.6);
   --tabbar-height: 56px;
   --ui-scale: 1;

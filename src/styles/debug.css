@@ -93,13 +93,13 @@
 }
 
 .debug-source.error {
-  background: rgba(255, 107, 107, 0.2);
-  color: #ff9b9b;
+  background: rgba(255, 69, 58, 0.15);
+  color: var(--status-error);
 }
 
 .debug-source.stderr {
-  background: rgba(255, 196, 96, 0.2);
-  color: #ffcf80;
+  background: rgba(255, 159, 10, 0.15);
+  color: var(--status-warning);
 }
 
 .debug-payload {

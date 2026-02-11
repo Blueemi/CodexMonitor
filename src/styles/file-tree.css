@@ -238,7 +238,7 @@
 }
 
 .file-preview-error {
-  color: var(--text-danger, #f87171);
+  color: var(--status-error);
 }
 
 .file-preview-body {
@@ -269,7 +269,7 @@
   max-height: 58vh;
   object-fit: contain;
   border-radius: 8px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .file-preview-toolbar {
@@ -320,12 +320,12 @@
   background: var(--surface-active);
   color: var(--text-strong);
   border: 1px solid var(--border-accent);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .file-preview-action--add:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .file-preview-lines {
