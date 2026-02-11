@@ -385,6 +385,8 @@ describe("Messages", () => {
     );
 
     expect(container.querySelector(".reasoning-inline")).toBeTruthy();
+    expect(container.querySelector(".reasoning-inline-detail")).toBeNull();
+    fireEvent.click(screen.getByLabelText("Toggle reasoning details"));
     const reasoningDetail = container.querySelector(".reasoning-inline-detail");
     expect(reasoningDetail?.textContent ?? "").toContain("Looking for entry points");
     const workingText = container.querySelector(".working-text");
@@ -415,6 +417,8 @@ describe("Messages", () => {
 
     const workingText = container.querySelector(".working-text");
     expect(workingText?.textContent ?? "").toContain("Plan from content");
+    expect(container.querySelector(".reasoning-inline-detail")).toBeNull();
+    fireEvent.click(screen.getByLabelText("Toggle reasoning details"));
     const reasoningDetail = container.querySelector(".reasoning-inline-detail");
     expect(reasoningDetail?.textContent ?? "").toContain("More detail here");
     expect(reasoningDetail?.textContent ?? "").not.toContain("Plan from content");
@@ -597,6 +601,7 @@ describe("Messages", () => {
       />,
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "Expand tool calls" }));
     await waitFor(() => {
       const exploreBlocks = container.querySelectorAll(".explore-inline");
       expect(exploreBlocks.length).toBe(2);
@@ -639,11 +644,12 @@ describe("Messages", () => {
       />,
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "Expand tool calls" }));
     await waitFor(() => {
       expect(container.querySelectorAll(".explore-inline").length).toBe(2);
     });
     const exploreBlocks = Array.from(container.querySelectorAll(".explore-inline"));
-    const reasoningDetail = container.querySelector(".reasoning-inline-detail");
+    const reasoningDetail = container.querySelector(".reasoning-inline");
     expect(exploreBlocks.length).toBe(2);
     expect(reasoningDetail).toBeTruthy();
     const [firstExploreBlock, secondExploreBlock] = exploreBlocks;

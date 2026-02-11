@@ -1,5 +1,6 @@
 import type { AppSettings } from "../../../../types";
 import { fileManagerName, openInFileManagerLabel } from "../../../../utils/platformPaths";
+import { SettingsMenuSelect } from "../SettingsMenuSelect";
 
 type SettingsFeaturesSectionProps = {
   appSettings: AppSettings;
@@ -74,21 +75,22 @@ export function SettingsFeaturesSection({
             config.toml).
           </div>
         </div>
-        <select
+        <SettingsMenuSelect
           id="features-personality-select"
           className="settings-select"
           value={appSettings.personality}
-          onChange={(event) =>
+          onChange={(nextPersonality) =>
             void onUpdateAppSettings({
               ...appSettings,
-              personality: event.target.value as AppSettings["personality"],
+              personality: nextPersonality as AppSettings["personality"],
             })
           }
-          aria-label="Personality"
-        >
-          <option value="friendly">Friendly</option>
-          <option value="pragmatic">Pragmatic</option>
-        </select>
+          ariaLabel="Personality"
+          options={[
+            { value: "friendly", label: "Friendly" },
+            { value: "pragmatic", label: "Pragmatic" },
+          ]}
+        />
       </div>
       <div className="settings-toggle-row">
         <div>

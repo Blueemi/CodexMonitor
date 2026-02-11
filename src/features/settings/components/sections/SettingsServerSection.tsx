@@ -5,6 +5,7 @@ import type {
   TailscaleStatus,
   TcpDaemonStatus,
 } from "../../../../types";
+import { SettingsMenuSelect } from "../SettingsMenuSelect";
 
 type SettingsServerSectionProps = {
   appSettings: AppSettings;
@@ -147,20 +148,21 @@ export function SettingsServerSection({
           <label className="settings-field-label" htmlFor="backend-mode">
             Backend mode
           </label>
-          <select
+          <SettingsMenuSelect
             id="backend-mode"
             className="settings-select"
             value={appSettings.backendMode}
-            onChange={(event) =>
+            onChange={(nextMode) =>
               void onUpdateAppSettings({
                 ...appSettings,
-                backendMode: event.target.value as AppSettings["backendMode"],
+                backendMode: nextMode as AppSettings["backendMode"],
               })
             }
-          >
-            <option value="local">Local (default)</option>
-            <option value="remote">Remote (daemon)</option>
-          </select>
+            options={[
+              { value: "local", label: "Local (default)" },
+              { value: "remote", label: "Remote (daemon)" },
+            ]}
+          />
           <div className="settings-help">
             Local keeps desktop requests in-process. Remote routes desktop requests through the same
             network transport path used by mobile clients.
@@ -173,20 +175,21 @@ export function SettingsServerSection({
           <label className="settings-field-label" htmlFor="remote-provider">
             {isMobileSimplified ? "Connection type" : "Remote provider"}
           </label>
-          <select
+          <SettingsMenuSelect
             id="remote-provider"
             className="settings-select"
             value={appSettings.remoteBackendProvider}
-            onChange={(event) => {
+            onChange={(nextProvider) => {
               void onChangeRemoteProvider(
-                event.target.value as AppSettings["remoteBackendProvider"],
+                nextProvider as AppSettings["remoteBackendProvider"],
               );
             }}
-            aria-label={isMobileSimplified ? "Connection type" : "Remote provider"}
-          >
-            <option value="tcp">{isMobileSimplified ? "TCP" : "TCP (wip)"}</option>
-            <option value="orbit">{isMobileSimplified ? "Orbit" : "Orbit (wip)"}</option>
-          </select>
+            ariaLabel={isMobileSimplified ? "Connection type" : "Remote provider"}
+            options={[
+              { value: "tcp", label: isMobileSimplified ? "TCP" : "TCP (wip)" },
+              { value: "orbit", label: isMobileSimplified ? "Orbit" : "Orbit (wip)" },
+            ]}
+          />
           <div className="settings-help">
             {isMobileSimplified
               ? "TCP uses your desktop daemon Tailscale address. Orbit uses your Orbit websocket endpoint."

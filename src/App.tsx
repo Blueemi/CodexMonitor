@@ -755,10 +755,32 @@ function MainApp() {
     activeThreadId,
   });
   const activeThreadIdRef = useRef<string | null>(activeThreadId ?? null);
+  const previousChatEntryRef = useRef<{
+    activeThreadId: string | null;
+    centerMode: "chat" | "diff";
+  } | null>(null);
   const { getThreadRows } = useThreadRows(threadParentById);
   useEffect(() => {
     activeThreadIdRef.current = activeThreadId ?? null;
   }, [activeThreadId]);
+
+  useEffect(() => {
+    const previous = previousChatEntryRef.current;
+    previousChatEntryRef.current = {
+      activeThreadId: activeThreadId ?? null,
+      centerMode,
+    };
+
+    if (centerMode !== "chat" || !activeThreadId) {
+      return;
+    }
+
+    const enteredChatMode = previous?.centerMode !== "chat";
+    const switchedThread = previous?.activeThreadId !== activeThreadId;
+    if (enteredChatMode || switchedThread) {
+      collapseRightPanel();
+    }
+  }, [activeThreadId, centerMode, collapseRightPanel]);
 
   const { recordPendingThreadLink } = useSystemNotificationThreadLinks({
     hasLoadedWorkspaces: hasLoaded,

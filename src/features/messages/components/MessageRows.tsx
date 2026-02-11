@@ -27,7 +27,6 @@ import {
   toolStatusTone,
   type MessageImage,
   type ParsedReasoning,
-  type StatusTone,
   type ToolSummary,
 } from "../utils/messageRenderUtils";
 import { Markdown } from "./Markdown";
@@ -403,7 +402,6 @@ export const ReasoningRow = memo(function ReasoningRow({
   onOpenThreadLink,
 }: ReasoningRowProps) {
   const { summaryTitle, bodyText, hasBody } = parsed;
-  const reasoningTone: StatusTone = hasBody ? "completed" : "processing";
   return (
     <div className="tool-inline reasoning-inline">
       <button
@@ -420,19 +418,13 @@ export const ReasoningRow = memo(function ReasoningRow({
           onClick={() => onToggle(item.id)}
           aria-expanded={isExpanded}
         >
-          <Brain
-            className={`tool-inline-icon ${reasoningTone}`}
-            size={14}
-            aria-hidden
-          />
+          <Brain className="tool-inline-icon reasoning-inline-icon" size={14} aria-hidden />
           <span className="tool-inline-value">{summaryTitle}</span>
         </button>
-        {hasBody && (
+        {hasBody && isExpanded && (
           <Markdown
             value={bodyText}
-            className={`reasoning-inline-detail markdown ${
-              isExpanded ? "" : "tool-inline-clamp"
-            }`}
+            className="reasoning-inline-detail markdown"
             showFilePath={showMessageFilePath}
             workspacePath={workspacePath}
             onOpenFileLink={onOpenFileLink}

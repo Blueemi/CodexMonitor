@@ -84,6 +84,7 @@ export const Messages = memo(function Messages({
   const autoScrollRef = useRef(true);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const manuallyToggledExpandedRef = useRef<Set<string>>(new Set());
+  const manuallyToggledToolGroupsRef = useRef<Set<string>>(new Set());
   const [collapsedToolGroups, setCollapsedToolGroups] = useState<Set<string>>(
     new Set(),
   );
@@ -133,6 +134,7 @@ export const Messages = memo(function Messages({
 
   useLayoutEffect(() => {
     autoScrollRef.current = true;
+    manuallyToggledToolGroupsRef.current.clear();
   }, [threadId]);
 
   const toggleExpanded = useCallback((id: string) => {
@@ -149,6 +151,7 @@ export const Messages = memo(function Messages({
   }, []);
 
   const toggleToolGroup = useCallback((id: string) => {
+    manuallyToggledToolGroupsRef.current.add(id);
     setCollapsedToolGroups((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -271,6 +274,26 @@ export const Messages = memo(function Messages({
   }, [scrollKey, isThinking, isNearBottom, threadId]);
 
   const groupedItems = useMemo(() => buildToolGroups(visibleItems), [visibleItems]);
+
+  useEffect(() => {
+    setCollapsedToolGroups((prev) => {
+      let next: Set<string> | null = null;
+      groupedItems.forEach((entry) => {
+        if (entry.kind !== "toolGroup") {
+          return;
+        }
+        const id = entry.group.id;
+        if (prev.has(id) || manuallyToggledToolGroupsRef.current.has(id)) {
+          return;
+        }
+        if (!next) {
+          next = new Set(prev);
+        }
+        next.add(id);
+      });
+      return next ?? prev;
+    });
+  }, [groupedItems]);
 
   const hasActiveUserInputRequest = activeUserInputRequestId !== null;
   const hasVisibleUserInputRequest = hasActiveUserInputRequest && Boolean(onUserInputSubmit);

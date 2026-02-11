@@ -1,4 +1,5 @@
 import type { AppSettings } from "../../../../types";
+import { SettingsMenuSelect } from "../SettingsMenuSelect";
 
 type ComposerPreset = AppSettings["composerEditorPreset"];
 
@@ -31,20 +32,16 @@ export function SettingsComposerSection({
         <label className="settings-field-label" htmlFor="composer-preset">
           Preset
         </label>
-        <select
+        <SettingsMenuSelect
           id="composer-preset"
           className="settings-select"
           value={appSettings.composerEditorPreset}
-          onChange={(event) =>
-            onComposerPresetChange(event.target.value as ComposerPreset)
-          }
-        >
-          {Object.entries(composerPresetLabels).map(([preset, label]) => (
-            <option key={preset} value={preset}>
-              {label}
-            </option>
-          ))}
-        </select>
+          onChange={(nextPreset) => onComposerPresetChange(nextPreset as ComposerPreset)}
+          options={Object.entries(composerPresetLabels).map(([preset, label]) => ({
+            value: preset,
+            label,
+          }))}
+        />
         <div className="settings-help">
           Presets update the toggles below. Customize any setting after selecting.
         </div>

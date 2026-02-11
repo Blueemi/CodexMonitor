@@ -7,6 +7,7 @@ import {
   DEFAULT_CODE_FONT_FAMILY,
   DEFAULT_UI_FONT_FAMILY,
 } from "../../../../utils/fonts";
+import { SettingsMenuSelect } from "../SettingsMenuSelect";
 
 type SettingsDisplaySectionProps = {
   appSettings: AppSettings;
@@ -69,22 +70,23 @@ export function SettingsDisplaySection({
         <label className="settings-field-label" htmlFor="theme-select">
           Theme
         </label>
-        <select
+        <SettingsMenuSelect
           id="theme-select"
           className="settings-select"
           value={appSettings.theme}
-          onChange={(event) =>
+          onChange={(nextTheme) =>
             void onUpdateAppSettings({
               ...appSettings,
-              theme: event.target.value as AppSettings["theme"],
+              theme: nextTheme as AppSettings["theme"],
             })
           }
-        >
-          <option value="system">System</option>
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
-          <option value="dim">Dim</option>
-        </select>
+          options={[
+            { value: "system", label: "System" },
+            { value: "light", label: "Light" },
+            { value: "dark", label: "Dark" },
+            { value: "dim", label: "Dim" },
+          ]}
+        />
       </div>
       <div className="settings-toggle-row">
         <div>

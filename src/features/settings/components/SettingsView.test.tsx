@@ -314,8 +314,8 @@ describe("SettingsView Display", () => {
     const onUpdateAppSettings = vi.fn().mockResolvedValue(undefined);
     renderDisplaySection({ onUpdateAppSettings });
 
-    const select = screen.getByLabelText("Theme");
-    fireEvent.change(select, { target: { value: "dark" } });
+    fireEvent.click(screen.getByLabelText("Theme"));
+    fireEvent.click(screen.getByRole("button", { name: "Dark" }));
 
     await waitFor(() => {
       expect(onUpdateAppSettings).toHaveBeenCalledWith(
@@ -670,9 +670,8 @@ describe("SettingsView Codex overrides", () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText("Review mode"), {
-      target: { value: "detached" },
-    });
+    fireEvent.click(screen.getByLabelText("Review mode"));
+    fireEvent.click(screen.getByRole("button", { name: "Detached (new review thread)" }));
 
     await waitFor(() => {
       expect(onUpdateAppSettings).toHaveBeenCalledWith(
@@ -1236,9 +1235,8 @@ describe("SettingsView Features", () => {
     const onUpdateAppSettings = vi.fn().mockResolvedValue(undefined);
     renderFeaturesSection({ onUpdateAppSettings });
 
-    fireEvent.change(screen.getByLabelText("Personality"), {
-      target: { value: "pragmatic" },
-    });
+    fireEvent.click(screen.getByLabelText("Personality"));
+    fireEvent.click(screen.getByRole("button", { name: "Pragmatic" }));
 
     await waitFor(() => {
       expect(onUpdateAppSettings).toHaveBeenCalledWith(

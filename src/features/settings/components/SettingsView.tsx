@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ask, open } from "@tauri-apps/plugin-dialog";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
-import X from "lucide-react/dist/esm/icons/x";
 import type {
   AppSettings,
   CodexDoctorResult,
@@ -1325,21 +1324,8 @@ export function SettingsView({
       className="settings-overlay"
       cardClassName="settings-window"
       onBackdropClick={onClose}
-      ariaLabelledBy="settings-modal-title"
+      ariaLabel="Settings"
     >
-      <div className="settings-titlebar">
-        <div className="settings-title" id="settings-modal-title">
-          Settings
-        </div>
-        <button
-          type="button"
-          className="ghost icon-button settings-close"
-          onClick={onClose}
-          aria-label="Close settings"
-        >
-          <X aria-hidden />
-        </button>
-      </div>
       <div className={settingsBodyClassName}>
         {(!useMobileMasterDetail || !showMobileDetail) && (
           <div className="settings-master">

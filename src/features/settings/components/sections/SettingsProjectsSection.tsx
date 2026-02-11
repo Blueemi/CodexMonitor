@@ -3,6 +3,7 @@ import ChevronUp from "lucide-react/dist/esm/icons/chevron-up";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import type { Dispatch, SetStateAction } from "react";
 import type { WorkspaceGroup, WorkspaceInfo } from "../../../../types";
+import { SettingsMenuSelect } from "../SettingsMenuSelect";
 
 type GroupedWorkspaces = Array<{
   id: string | null;
@@ -206,21 +207,21 @@ export function SettingsProjectsSection({
                     <div className="settings-project-path">{workspace.path}</div>
                   </div>
                   <div className="settings-project-actions">
-                    <select
+                    <SettingsMenuSelect
                       className="settings-select settings-select--compact"
                       value={groupValue}
-                      onChange={(event) => {
-                        const nextGroupId = event.target.value || null;
+                      onChange={(nextGroupValue) => {
+                        const nextGroupId = nextGroupValue || null;
                         void onAssignWorkspaceGroup(workspace.id, nextGroupId);
                       }}
-                    >
-                      <option value="">{ungroupedLabel}</option>
-                      {workspaceGroups.map((entry) => (
-                        <option key={entry.id} value={entry.id}>
-                          {entry.name}
-                        </option>
-                      ))}
-                    </select>
+                      options={[
+                        { value: "", label: ungroupedLabel },
+                        ...workspaceGroups.map((entry) => ({
+                          value: entry.id,
+                          label: entry.name,
+                        })),
+                      ]}
+                    />
                     <button
                       type="button"
                       className="ghost icon-button"

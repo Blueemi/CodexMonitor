@@ -7,6 +7,7 @@ import type {
   WorkspaceInfo,
 } from "../../../../types";
 import { FileEditorCard } from "../../../shared/components/FileEditorCard";
+import { SettingsMenuSelect } from "../SettingsMenuSelect";
 
 type SettingsCodexSectionProps = {
   appSettings: AppSettings;
@@ -270,40 +271,42 @@ export function SettingsCodexSection({
         <label className="settings-field-label" htmlFor="default-access">
           Default access mode
         </label>
-        <select
+        <SettingsMenuSelect
           id="default-access"
           className="settings-select"
           value={appSettings.defaultAccessMode}
-          onChange={(event) =>
+          onChange={(nextAccessMode) =>
             void onUpdateAppSettings({
               ...appSettings,
-              defaultAccessMode: event.target.value as AppSettings["defaultAccessMode"],
+              defaultAccessMode: nextAccessMode as AppSettings["defaultAccessMode"],
             })
           }
-        >
-          <option value="read-only">Read only</option>
-          <option value="current">On-request</option>
-          <option value="full-access">Full access</option>
-        </select>
+          options={[
+            { value: "read-only", label: "Read only" },
+            { value: "current", label: "On-request" },
+            { value: "full-access", label: "Full access" },
+          ]}
+        />
       </div>
       <div className="settings-field">
         <label className="settings-field-label" htmlFor="review-delivery">
           Review mode
         </label>
-        <select
+        <SettingsMenuSelect
           id="review-delivery"
           className="settings-select"
           value={appSettings.reviewDeliveryMode}
-          onChange={(event) =>
+          onChange={(nextReviewDelivery) =>
             void onUpdateAppSettings({
               ...appSettings,
-              reviewDeliveryMode: event.target.value as AppSettings["reviewDeliveryMode"],
+              reviewDeliveryMode: nextReviewDelivery as AppSettings["reviewDeliveryMode"],
             })
           }
-        >
-          <option value="inline">Inline (same thread)</option>
-          <option value="detached">Detached (new review thread)</option>
-        </select>
+          options={[
+            { value: "inline", label: "Inline (same thread)" },
+            { value: "detached", label: "Detached (new review thread)" },
+          ]}
+        />
         <div className="settings-help">
           Choose whether <code>/review</code> runs in the current thread or a detached review
           thread.

@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import type { WorkspaceInfo } from "../../../../types";
 import { pushErrorToast } from "../../../../services/toasts";
+import { SettingsMenuSelect } from "../SettingsMenuSelect";
 
 type SettingsEnvironmentsSectionProps = {
   mainWorkspaces: WorkspaceInfo[];
@@ -41,19 +42,17 @@ export function SettingsEnvironmentsSection({
             <label className="settings-field-label" htmlFor="settings-environment-project">
               Project
             </label>
-            <select
+            <SettingsMenuSelect
               id="settings-environment-project"
               className="settings-select"
               value={environmentWorkspace?.id ?? ""}
-              onChange={(event) => onSetEnvironmentWorkspaceId(event.target.value)}
+              onChange={(workspaceId) => onSetEnvironmentWorkspaceId(workspaceId)}
               disabled={environmentSaving}
-            >
-              {mainWorkspaces.map((workspace) => (
-                <option key={workspace.id} value={workspace.id}>
-                  {workspace.name}
-                </option>
-              ))}
-            </select>
+              options={mainWorkspaces.map((workspace) => ({
+                value: workspace.id,
+                label: workspace.name,
+              }))}
+            />
             {environmentWorkspace ? (
               <div className="settings-help">{environmentWorkspace.path}</div>
             ) : null}
