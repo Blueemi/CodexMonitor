@@ -1104,6 +1104,56 @@ function MainApp() {
   const activeRateLimits = activeWorkspaceId
     ? rateLimitsByWorkspace[activeWorkspaceId] ?? null
     : null;
+  const resolvedAccountPlanType = useMemo(() => {
+    const readPlan = (value: string | null | undefined) => {
+      if (typeof value !== "string") {
+        return null;
+      }
+      const trimmed = value.trim();
+      return trimmed.length > 0 ? trimmed : null;
+    };
+
+    const activePlanType =
+      readPlan(activeAccount?.planType) ?? readPlan(activeRateLimits?.planType);
+    if (activePlanType) {
+      return activePlanType;
+    }
+
+    for (const account of Object.values(accountByWorkspace)) {
+      const planType = readPlan(account?.planType);
+      if (planType) {
+        return planType;
+      }
+    }
+    for (const rateLimits of Object.values(rateLimitsByWorkspace)) {
+      const planType = readPlan(rateLimits?.planType);
+      if (planType) {
+        return planType;
+      }
+    }
+    return null;
+  }, [activeAccount, activeRateLimits, accountByWorkspace, rateLimitsByWorkspace]);
+  const accountPlanProbeWorkspaceId = useMemo(
+    () => workspaces.find((workspace) => workspace.connected)?.id ?? workspaces[0]?.id ?? null,
+    [workspaces],
+  );
+  const lastAccountPlanProbeWorkspaceIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (resolvedAccountPlanType || !accountPlanProbeWorkspaceId) {
+      return;
+    }
+    if (lastAccountPlanProbeWorkspaceIdRef.current === accountPlanProbeWorkspaceId) {
+      return;
+    }
+    lastAccountPlanProbeWorkspaceIdRef.current = accountPlanProbeWorkspaceId;
+    void refreshAccountInfo(accountPlanProbeWorkspaceId);
+    void refreshAccountRateLimits(accountPlanProbeWorkspaceId);
+  }, [
+    resolvedAccountPlanType,
+    accountPlanProbeWorkspaceId,
+    refreshAccountInfo,
+    refreshAccountRateLimits,
+  ]);
   const activeTokenUsage = activeThreadId
     ? tokenUsageByThread[activeThreadId] ?? null
     : null;
@@ -1820,6 +1870,7 @@ function MainApp() {
     activeThreadId,
     activeItems,
     activeRateLimits,
+    resolvedAccountPlanType,
     usageShowRemaining: appSettings.usageShowRemaining,
     accountInfo: activeAccount,
     onSwitchAccount: handleSwitchAccount,

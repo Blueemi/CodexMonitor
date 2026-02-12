@@ -221,6 +221,114 @@
   position: relative;
 }
 
+.home-usage-card-with-preview {
+  overflow: visible;
+}
+
+.home-usage-card-with-preview:focus-visible {
+  outline: 1px solid var(--text-accent);
+  outline-offset: 2px;
+}
+
+.home-usage-cost-preview {
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  top: calc(100% + 10px);
+  width: min(420px, 76vw);
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-popover);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 140ms ease, transform 140ms ease;
+  pointer-events: none;
+}
+
+.home-usage-card-with-preview:hover .home-usage-cost-preview,
+.home-usage-card-with-preview:focus-within .home-usage-cost-preview,
+.home-usage-card-with-preview:focus-visible .home-usage-cost-preview {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.home-usage-cost-preview-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+}
+
+.home-usage-cost-preview-total {
+  font-size: 14px;
+  color: var(--text-stronger);
+  font-weight: 600;
+}
+
+.home-usage-cost-preview-meta {
+  font-size: 11px;
+  color: var(--text-subtle);
+}
+
+.home-usage-cost-preview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.home-usage-cost-preview-row {
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.home-usage-cost-preview-model {
+  font-size: 12px;
+  color: var(--text-stronger);
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.home-usage-cost-preview-note {
+  font-size: 10px;
+  color: var(--text-subtle);
+}
+
+.home-usage-cost-preview-tokens {
+  font-size: 11px;
+  color: var(--text-subtle);
+}
+
+.home-usage-cost-preview-price {
+  font-size: 12px;
+  color: var(--text-stronger);
+  font-weight: 600;
+}
+
+.home-usage-cost-preview-empty {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.home-usage-cost-preview-footnote {
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
 .home-usage-label {
   font-size: 11px;
   text-transform: uppercase;
@@ -376,6 +484,64 @@
 
 .home-usage-model-empty {
   font-size: 12px;
+  color: var(--text-faint);
+}
+
+.home-usage-savings {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.home-usage-savings-label {
+  font-size: 10px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.home-usage-savings-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-stronger);
+}
+
+.home-usage-savings-caption {
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.home-usage-savings-note {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.home-usage-footer {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.home-usage-footer-label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+.home-usage-footer-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-stronger);
+}
+
+.home-usage-footer-caption {
   color: var(--text-faint);
 }
 

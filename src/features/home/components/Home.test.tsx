@@ -85,10 +85,16 @@ describe("Home", () => {
           totals: {
             last7DaysTokens: 15,
             last30DaysTokens: 15,
+            allTimeTokens: 15,
             averageDailyTokens: 15,
             cacheHitRatePercent: 0,
             peakDay: "2026-01-20",
             peakDayTokens: 15,
+          },
+          modelUsage: {
+            last7Days: [],
+            last30Days: [],
+            allTime: [],
           },
           topModels: [],
         }}
@@ -98,5 +104,112 @@ describe("Home", () => {
     expect(screen.getAllByText("agent time").length).toBeGreaterThan(0);
     expect(screen.getByText("Runs")).toBeTruthy();
     expect(screen.getByText("Peak day")).toBeTruthy();
+  });
+
+  it("renders all-time API price preview details", () => {
+    render(
+      <Home
+        {...baseProps}
+        accountPlanType="pro"
+        localUsageSnapshot={{
+          updatedAt: Date.now(),
+          days: [
+            {
+              day: "2026-01-20",
+              inputTokens: 1200000,
+              cachedInputTokens: 200000,
+              outputTokens: 100000,
+              totalTokens: 1300000,
+              agentTimeMs: 120000,
+              agentRuns: 2,
+            },
+          ],
+          totals: {
+            last7DaysTokens: 1300000,
+            last30DaysTokens: 1300000,
+            allTimeTokens: 1300000,
+            averageDailyTokens: 1300000,
+            cacheHitRatePercent: 16.7,
+            peakDay: "2026-01-20",
+            peakDayTokens: 1300000,
+          },
+          modelUsage: {
+            last7Days: [
+              {
+                model: "gpt-5.2-codex",
+                tokens: 300000,
+                inputTokens: 250000,
+                cachedInputTokens: 50000,
+                outputTokens: 50000,
+                sharePercent: 85.7,
+              },
+            ],
+            last30Days: [
+              {
+                model: "gpt-5.2-codex",
+                tokens: 1100000,
+                inputTokens: 1000000,
+                cachedInputTokens: 200000,
+                outputTokens: 100000,
+                sharePercent: 84.6,
+              },
+              {
+                model: "gpt-5.3-codex",
+                tokens: 200000,
+                inputTokens: 150000,
+                cachedInputTokens: 50000,
+                outputTokens: 50000,
+                sharePercent: 15.4,
+              },
+            ],
+            allTime: [
+              {
+                model: "gpt-5.2-codex",
+                tokens: 1100000,
+                inputTokens: 1000000,
+                cachedInputTokens: 200000,
+                outputTokens: 100000,
+                sharePercent: 84.6,
+              },
+              {
+                model: "gpt-5.3-codex",
+                tokens: 200000,
+                inputTokens: 150000,
+                cachedInputTokens: 50000,
+                outputTokens: 50000,
+                sharePercent: 15.4,
+              },
+            ],
+          },
+          topModels: [
+            {
+              model: "gpt-5.2-codex",
+              tokens: 1100000,
+              inputTokens: 1000000,
+              cachedInputTokens: 200000,
+              outputTokens: 100000,
+              sharePercent: 84.6,
+            },
+            {
+              model: "gpt-5.3-codex",
+              tokens: 200000,
+              inputTokens: 150000,
+              cachedInputTokens: 50000,
+              outputTokens: 50000,
+              sharePercent: 15.4,
+            },
+          ],
+        }}
+      />,
+    );
+
+    expect(screen.getByText("API price preview (all time)")).toBeTruthy();
+    expect(screen.getByText("API price preview (last 7 days)")).toBeTruthy();
+    expect(screen.getByText("API price preview (last 30 days)")).toBeTruthy();
+    expect(screen.getAllByText(/Estimated total:/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Estimated 30-day savings").length).toBeGreaterThan(0);
+    expect(screen.getByText(/ChatGPT Pro/)).toBeTruthy();
+    expect(screen.getAllByText("gpt-5.2-codex").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/assumed as gpt-5.2-codex/).length).toBeGreaterThan(0);
   });
 });

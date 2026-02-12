@@ -9,7 +9,8 @@ use tokio::sync::Mutex;
 
 use crate::codex::home::{resolve_default_codex_home, resolve_workspace_codex_home};
 use crate::types::{
-    LocalUsageDay, LocalUsageModel, LocalUsageSnapshot, LocalUsageTotals, WorkspaceEntry,
+    LocalUsageDay, LocalUsageModel, LocalUsageModelBreakdown, LocalUsageSnapshot,
+    LocalUsageTotals, WorkspaceEntry,
 };
 
 #[derive(Default, Clone, Copy)]
@@ -26,6 +27,20 @@ struct UsageTotals {
     input: i64,
     cached: i64,
     output: i64,
+}
+
+#[derive(Default, Clone, Copy)]
+struct ModelUsageTotals {
+    input: i64,
+    cached: i64,
+    output: i64,
+}
+
+#[derive(Default)]
+struct ModelTotalsBuckets {
+    all_time: HashMap<String, ModelUsageTotals>,
+    last30_days: HashMap<String, ModelUsageTotals>,
+    last7_days: HashMap<String, ModelUsageTotals>,
 }
 
 const MAX_ACTIVITY_GAP_MS: i64 = 2 * 60 * 1000;
@@ -71,40 +86,46 @@ fn scan_local_usage(
         .iter()
         .map(|key| (key.clone(), DailyTotals::default()))
         .collect();
-    let mut model_totals: HashMap<String, i64> = HashMap::new();
+    let last7_day_keys: HashSet<String> = day_keys.iter().rev().take(7).cloned().collect();
+    let mut model_totals = ModelTotalsBuckets::default();
+    let mut all_time_totals = UsageTotals::default();
 
     if sessions_roots.is_empty() {
-        return Ok(build_snapshot(updated_at, day_keys, daily, HashMap::new()));
+        return Ok(build_snapshot(
+            updated_at,
+            day_keys,
+            daily,
+            model_totals,
+            all_time_totals,
+        ));
     }
 
     for root in sessions_roots {
-        for day_key in &day_keys {
-            let day_dir = day_dir_for_key(root, day_key);
-            if !day_dir.exists() {
-                continue;
-            }
-            let entries = match std::fs::read_dir(&day_dir) {
-                Ok(entries) => entries,
-                Err(_) => continue,
-            };
-            for entry in entries.flatten() {
-                let path = entry.path();
-                if path.extension().and_then(|ext| ext.to_str()) != Some("jsonl") {
-                    continue;
-                }
-                scan_file(&path, &mut daily, &mut model_totals, workspace_path)?;
-            }
-        }
+        scan_sessions_root(
+            root,
+            &mut daily,
+            &mut model_totals,
+            &last7_day_keys,
+            &mut all_time_totals,
+            workspace_path,
+        )?;
     }
 
-    Ok(build_snapshot(updated_at, day_keys, daily, model_totals))
+    Ok(build_snapshot(
+        updated_at,
+        day_keys,
+        daily,
+        model_totals,
+        all_time_totals,
+    ))
 }
 
 fn build_snapshot(
     updated_at: i64,
     day_keys: Vec<String>,
     daily: HashMap<String, DailyTotals>,
-    model_totals: HashMap<String, i64>,
+    model_totals: ModelTotalsBuckets,
+    all_time_totals: UsageTotals,
 ) -> LocalUsageSnapshot {
     let mut days: Vec<LocalUsageDay> = Vec::with_capacity(day_keys.len());
     let mut total_tokens = 0;
@@ -148,21 +169,22 @@ fn build_snapshot(
     let peak_day = peak.map(|day| day.day.clone());
     let peak_day_tokens = peak.map(|day| day.total_tokens).unwrap_or(0);
 
-    let mut top_models: Vec<LocalUsageModel> = model_totals
-        .into_iter()
-        .filter(|(model, tokens)| model != "unknown" && *tokens > 0)
-        .map(|(model, tokens)| LocalUsageModel {
-            model,
-            tokens,
-            share_percent: if total_tokens > 0 {
-                ((tokens as f64) / (total_tokens as f64) * 1000.0).round() / 10.0
-            } else {
-                0.0
-            },
-        })
-        .collect();
-    top_models.sort_by(|a, b| b.tokens.cmp(&a.tokens));
-    top_models.truncate(4);
+    let all_time_tokens = all_time_totals.input + all_time_totals.output;
+    let mut all_time_models = build_model_usage_list(model_totals.all_time, all_time_tokens);
+    let mut last30_models = build_model_usage_list(model_totals.last30_days, total_tokens);
+    let mut last7_models = build_model_usage_list(model_totals.last7_days, last7_tokens);
+
+    all_time_models.sort_by(|a, b| b.tokens.cmp(&a.tokens));
+    last30_models.sort_by(|a, b| b.tokens.cmp(&a.tokens));
+    last7_models.sort_by(|a, b| b.tokens.cmp(&a.tokens));
+
+    let top_models = all_time_models.clone();
+
+    let model_usage = LocalUsageModelBreakdown {
+        last7_days: last7_models,
+        last30_days: last30_models,
+        all_time: all_time_models,
+    };
 
     LocalUsageSnapshot {
         updated_at,
@@ -170,19 +192,108 @@ fn build_snapshot(
         totals: LocalUsageTotals {
             last7_days_tokens: last7_tokens,
             last30_days_tokens: total_tokens,
+            all_time_tokens,
             average_daily_tokens,
             cache_hit_rate_percent,
             peak_day,
             peak_day_tokens,
         },
+        model_usage,
         top_models,
     }
+}
+
+fn build_model_usage_list(
+    totals: HashMap<String, ModelUsageTotals>,
+    window_total_tokens: i64,
+) -> Vec<LocalUsageModel> {
+    totals
+        .into_iter()
+        .filter(|(_, model_totals)| (model_totals.input + model_totals.output) > 0)
+        .map(|(model, model_totals)| {
+            let tokens = model_totals.input + model_totals.output;
+            LocalUsageModel {
+                model,
+                tokens,
+                input_tokens: model_totals.input,
+                cached_input_tokens: model_totals.cached,
+                output_tokens: model_totals.output,
+                share_percent: if window_total_tokens > 0 {
+                    ((tokens as f64) / (window_total_tokens as f64) * 1000.0).round() / 10.0
+                } else {
+                    0.0
+                },
+            }
+        })
+        .collect()
+}
+
+fn scan_sessions_root(
+    root: &Path,
+    daily: &mut HashMap<String, DailyTotals>,
+    model_totals: &mut ModelTotalsBuckets,
+    last7_day_keys: &HashSet<String>,
+    all_time_totals: &mut UsageTotals,
+    workspace_path: Option<&Path>,
+) -> Result<(), String> {
+    let years = match std::fs::read_dir(root) {
+        Ok(entries) => entries,
+        Err(_) => return Ok(()),
+    };
+
+    for year in years.flatten() {
+        let year_path = year.path();
+        if !year_path.is_dir() {
+            continue;
+        }
+        let months = match std::fs::read_dir(&year_path) {
+            Ok(entries) => entries,
+            Err(_) => continue,
+        };
+        for month in months.flatten() {
+            let month_path = month.path();
+            if !month_path.is_dir() {
+                continue;
+            }
+            let days = match std::fs::read_dir(&month_path) {
+                Ok(entries) => entries,
+                Err(_) => continue,
+            };
+            for day in days.flatten() {
+                let day_path = day.path();
+                if !day_path.is_dir() {
+                    continue;
+                }
+                let entries = match std::fs::read_dir(&day_path) {
+                    Ok(entries) => entries,
+                    Err(_) => continue,
+                };
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.extension().and_then(|ext| ext.to_str()) != Some("jsonl") {
+                        continue;
+                    }
+                    scan_file(
+                        &path,
+                        daily,
+                        model_totals,
+                        last7_day_keys,
+                        all_time_totals,
+                        workspace_path,
+                    )?;
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 fn scan_file(
     path: &Path,
     daily: &mut HashMap<String, DailyTotals>,
-    model_totals: &mut HashMap<String, i64>,
+    model_totals: &mut ModelTotalsBuckets,
+    last7_day_keys: &HashSet<String>,
+    all_time_totals: &mut UsageTotals,
     workspace_path: Option<&Path>,
 ) -> Result<(), String> {
     let file = match File::open(path) {
@@ -358,19 +469,39 @@ fn scan_file(
                 continue;
             }
 
+            let cached = delta.cached.min(delta.input);
+            all_time_totals.input += delta.input;
+            all_time_totals.cached += cached;
+            all_time_totals.output += delta.output;
+
             let timestamp_ms = read_timestamp_ms(&value);
             if let Some(day_key) = timestamp_ms.and_then(|ms| day_key_for_timestamp_ms(ms)) {
                 if let Some(entry) = daily.get_mut(&day_key) {
-                    let cached = delta.cached.min(delta.input);
                     entry.input += delta.input;
                     entry.cached += cached;
                     entry.output += delta.output;
-
-                    let model = current_model
-                        .clone()
-                        .or_else(|| extract_model_from_token_count(&value))
-                        .unwrap_or_else(|| "unknown".to_string());
-                    *model_totals.entry(model).or_insert(0) += delta.input + delta.output;
+                }
+            }
+            let model = current_model
+                .clone()
+                .or_else(|| extract_model_from_token_count(&value))
+                .unwrap_or_else(|| "unknown".to_string());
+            let model_entry = model_totals.all_time.entry(model.clone()).or_default();
+            model_entry.input += delta.input;
+            model_entry.cached += cached;
+            model_entry.output += delta.output;
+            if let Some(day_key) = timestamp_ms.and_then(|ms| day_key_for_timestamp_ms(ms)) {
+                if daily.contains_key(&day_key) {
+                    let model_entry = model_totals.last30_days.entry(model.clone()).or_default();
+                    model_entry.input += delta.input;
+                    model_entry.cached += cached;
+                    model_entry.output += delta.output;
+                }
+                if last7_day_keys.contains(&day_key) {
+                    let model_entry = model_totals.last7_days.entry(model).or_default();
+                    model_entry.input += delta.input;
+                    model_entry.cached += cached;
+                    model_entry.output += delta.output;
                 }
             }
 
@@ -585,6 +716,7 @@ fn resolve_workspace_codex_home_for_path(
     resolve_workspace_codex_home(entry, parent_entry)
 }
 
+#[cfg(test)]
 fn day_dir_for_key(root: &Path, day_key: &str) -> PathBuf {
     let mut parts = day_key.split('-');
     let year = parts.next().unwrap_or("1970");
@@ -644,8 +776,18 @@ mod tests {
 
         let mut daily: HashMap<String, DailyTotals> = HashMap::new();
         daily.insert(day_key.to_string(), DailyTotals::default());
-        let mut model_totals: HashMap<String, i64> = HashMap::new();
-        scan_file(&path, &mut daily, &mut model_totals, None).expect("scan file");
+        let mut model_totals = ModelTotalsBuckets::default();
+        let mut all_time_totals = UsageTotals::default();
+        let last7_day_keys: HashSet<String> = [day_key.to_string()].into_iter().collect();
+        scan_file(
+            &path,
+            &mut daily,
+            &mut model_totals,
+            &last7_day_keys,
+            &mut all_time_totals,
+            None,
+        )
+        .expect("scan file");
 
         let totals = daily.get(day_key).copied().unwrap_or_default();
         assert_eq!(totals.input, 10);
@@ -662,8 +804,18 @@ mod tests {
 
         let mut daily: HashMap<String, DailyTotals> = HashMap::new();
         daily.insert(day_key.to_string(), DailyTotals::default());
-        let mut model_totals: HashMap<String, i64> = HashMap::new();
-        scan_file(&path, &mut daily, &mut model_totals, None).expect("scan file");
+        let mut model_totals = ModelTotalsBuckets::default();
+        let mut all_time_totals = UsageTotals::default();
+        let last7_day_keys: HashSet<String> = [day_key.to_string()].into_iter().collect();
+        scan_file(
+            &path,
+            &mut daily,
+            &mut model_totals,
+            &last7_day_keys,
+            &mut all_time_totals,
+            None,
+        )
+        .expect("scan file");
 
         let totals = daily.get(day_key).copied().unwrap_or_default();
         assert_eq!(totals.input, 20);
@@ -681,8 +833,18 @@ mod tests {
 
         let mut daily: HashMap<String, DailyTotals> = HashMap::new();
         daily.insert(day_key.to_string(), DailyTotals::default());
-        let mut model_totals: HashMap<String, i64> = HashMap::new();
-        scan_file(&path, &mut daily, &mut model_totals, None).expect("scan file");
+        let mut model_totals = ModelTotalsBuckets::default();
+        let mut all_time_totals = UsageTotals::default();
+        let last7_day_keys: HashSet<String> = [day_key.to_string()].into_iter().collect();
+        scan_file(
+            &path,
+            &mut daily,
+            &mut model_totals,
+            &last7_day_keys,
+            &mut all_time_totals,
+            None,
+        )
+        .expect("scan file");
 
         let totals = daily.get(day_key).copied().unwrap_or_default();
         assert_eq!(totals.input, 12);
@@ -699,8 +861,18 @@ mod tests {
 
         let mut daily: HashMap<String, DailyTotals> = HashMap::new();
         daily.insert(day_key.to_string(), DailyTotals::default());
-        let mut model_totals: HashMap<String, i64> = HashMap::new();
-        scan_file(&path, &mut daily, &mut model_totals, None).expect("scan file");
+        let mut model_totals = ModelTotalsBuckets::default();
+        let mut all_time_totals = UsageTotals::default();
+        let last7_day_keys: HashSet<String> = [day_key.to_string()].into_iter().collect();
+        scan_file(
+            &path,
+            &mut daily,
+            &mut model_totals,
+            &last7_day_keys,
+            &mut all_time_totals,
+            None,
+        )
+        .expect("scan file");
 
         let totals = daily.get(day_key).copied().unwrap_or_default();
         assert_eq!(totals.agent_ms, 5_000);
@@ -716,11 +888,53 @@ mod tests {
 
         let mut daily: HashMap<String, DailyTotals> = HashMap::new();
         daily.insert(day_key.to_string(), DailyTotals::default());
-        let mut model_totals: HashMap<String, i64> = HashMap::new();
-        scan_file(&path, &mut daily, &mut model_totals, None).expect("scan file");
+        let mut model_totals = ModelTotalsBuckets::default();
+        let mut all_time_totals = UsageTotals::default();
+        let last7_day_keys: HashSet<String> = [day_key.to_string()].into_iter().collect();
+        scan_file(
+            &path,
+            &mut daily,
+            &mut model_totals,
+            &last7_day_keys,
+            &mut all_time_totals,
+            None,
+        )
+        .expect("scan file");
 
         let totals = daily.get(day_key).copied().unwrap_or_default();
         assert_eq!(totals.agent_runs, 2);
+    }
+
+    #[test]
+    fn scan_file_tracks_model_token_breakdown() {
+        let day_key = "2026-01-19";
+        let path = write_temp_jsonl(&[
+            r#"{"timestamp":"2026-01-19T12:00:00.000Z","payload":{"type":"token_count","info":{"model":"gpt-5","total_token_usage":{"input_tokens":10,"cached_input_tokens":2,"output_tokens":3}}}}"#,
+        ]);
+
+        let mut daily: HashMap<String, DailyTotals> = HashMap::new();
+        daily.insert(day_key.to_string(), DailyTotals::default());
+        let mut model_totals = ModelTotalsBuckets::default();
+        let mut all_time_totals = UsageTotals::default();
+        let last7_day_keys: HashSet<String> = [day_key.to_string()].into_iter().collect();
+        scan_file(
+            &path,
+            &mut daily,
+            &mut model_totals,
+            &last7_day_keys,
+            &mut all_time_totals,
+            None,
+        )
+        .expect("scan file");
+
+        let model = model_totals
+            .all_time
+            .get("gpt-5")
+            .copied()
+            .unwrap_or_default();
+        assert_eq!(model.input, 10);
+        assert_eq!(model.cached, 2);
+        assert_eq!(model.output, 3);
     }
 
     #[test]
@@ -734,8 +948,18 @@ mod tests {
 
         let mut daily: HashMap<String, DailyTotals> = HashMap::new();
         daily.insert(day_key.to_string(), DailyTotals::default());
-        let mut model_totals: HashMap<String, i64> = HashMap::new();
-        scan_file(&path, &mut daily, &mut model_totals, None).expect("scan file");
+        let mut model_totals = ModelTotalsBuckets::default();
+        let mut all_time_totals = UsageTotals::default();
+        let last7_day_keys: HashSet<String> = [day_key.to_string()].into_iter().collect();
+        scan_file(
+            &path,
+            &mut daily,
+            &mut model_totals,
+            &last7_day_keys,
+            &mut all_time_totals,
+            None,
+        )
+        .expect("scan file");
 
         let totals = daily.get(day_key).copied().unwrap_or_default();
         assert_eq!(totals.agent_ms, 10_000);
@@ -752,11 +976,15 @@ mod tests {
 
         let mut daily: HashMap<String, DailyTotals> = HashMap::new();
         daily.insert(day_key.to_string(), DailyTotals::default());
-        let mut model_totals: HashMap<String, i64> = HashMap::new();
+        let mut model_totals = ModelTotalsBuckets::default();
+        let mut all_time_totals = UsageTotals::default();
+        let last7_day_keys: HashSet<String> = [day_key.to_string()].into_iter().collect();
         scan_file(
             &path,
             &mut daily,
             &mut model_totals,
+            &last7_day_keys,
+            &mut all_time_totals,
             Some(Path::new("/tmp/other-project")),
         )
         .expect("scan file");
@@ -773,11 +1001,24 @@ mod tests {
             .last()
             .cloned()
             .unwrap_or_else(|| Local::now().format("%Y-%m-%d").to_string());
+        let older_day_key = (Local::now().date_naive() - Duration::days(5))
+            .format("%Y-%m-%d")
+            .to_string();
         let naive =
             NaiveDateTime::parse_from_str(&format!("{day_key} 12:00:00"), "%Y-%m-%d %H:%M:%S")
                 .expect("timestamp");
         let timestamp_ms = Local
             .from_local_datetime(&naive)
+            .single()
+            .expect("timestamp")
+            .timestamp_millis();
+        let older_naive = NaiveDateTime::parse_from_str(
+            &format!("{older_day_key} 12:00:00"),
+            "%Y-%m-%d %H:%M:%S",
+        )
+        .expect("timestamp");
+        let older_timestamp_ms = Local
+            .from_local_datetime(&older_naive)
             .single()
             .expect("timestamp")
             .timestamp_millis();
@@ -791,8 +1032,12 @@ mod tests {
         let line_b = format!(
             r#"{{"timestamp":{timestamp_ms},"payload":{{"type":"token_count","info":{{"total_token_usage":{{"input_tokens":3,"cached_input_tokens":0,"output_tokens":1}}}}}}}}"#
         );
+        let older_line = format!(
+            r#"{{"timestamp":{older_timestamp_ms},"payload":{{"type":"token_count","info":{{"total_token_usage":{{"input_tokens":4,"cached_input_tokens":0,"output_tokens":2}}}}}}}}"#
+        );
 
         write_session_file(&root_a, &day_key, &[line_a]);
+        write_session_file(&root_a, &older_day_key, &[older_line]);
         write_session_file(&root_b, &day_key, &[line_b]);
 
         let snapshot = scan_local_usage(2, None, &[root_a, root_b]).expect("scan usage");
@@ -805,6 +1050,7 @@ mod tests {
         assert_eq!(day.input_tokens, 8);
         assert_eq!(day.output_tokens, 3);
         assert_eq!(snapshot.totals.last30_days_tokens, 11);
+        assert_eq!(snapshot.totals.all_time_tokens, 17);
     }
 
     #[test]

@@ -235,6 +235,12 @@ export function buildPrimaryNodes(options: LayoutNodesOptions): PrimaryLayoutNod
       usageWorkspaceOptions={options.usageWorkspaceOptions}
       onUsageWorkspaceChange={options.onUsageWorkspaceChange}
       onSelectThread={options.onSelectHomeThread}
+      accountPlanType={
+        options.resolvedAccountPlanType ??
+        options.accountInfo?.planType ??
+        options.activeRateLimits?.planType ??
+        null
+      }
     />
   );
 

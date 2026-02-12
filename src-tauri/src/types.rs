@@ -163,6 +163,7 @@ pub(crate) struct LocalUsageDay {
 pub(crate) struct LocalUsageTotals {
     pub(crate) last7_days_tokens: i64,
     pub(crate) last30_days_tokens: i64,
+    pub(crate) all_time_tokens: i64,
     pub(crate) average_daily_tokens: i64,
     pub(crate) cache_hit_rate_percent: f64,
     pub(crate) peak_day: Option<String>,
@@ -174,7 +175,18 @@ pub(crate) struct LocalUsageTotals {
 pub(crate) struct LocalUsageModel {
     pub(crate) model: String,
     pub(crate) tokens: i64,
+    pub(crate) input_tokens: i64,
+    pub(crate) cached_input_tokens: i64,
+    pub(crate) output_tokens: i64,
     pub(crate) share_percent: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct LocalUsageModelBreakdown {
+    pub(crate) last7_days: Vec<LocalUsageModel>,
+    pub(crate) last30_days: Vec<LocalUsageModel>,
+    pub(crate) all_time: Vec<LocalUsageModel>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -183,6 +195,8 @@ pub(crate) struct LocalUsageSnapshot {
     pub(crate) updated_at: i64,
     pub(crate) days: Vec<LocalUsageDay>,
     pub(crate) totals: LocalUsageTotals,
+    #[serde(default)]
+    pub(crate) model_usage: LocalUsageModelBreakdown,
     #[serde(default)]
     pub(crate) top_models: Vec<LocalUsageModel>,
 }

@@ -513,6 +513,7 @@ export type LocalUsageDay = {
 export type LocalUsageTotals = {
   last7DaysTokens: number;
   last30DaysTokens: number;
+  allTimeTokens: number;
   averageDailyTokens: number;
   cacheHitRatePercent: number;
   peakDay: string | null;
@@ -522,13 +523,23 @@ export type LocalUsageTotals = {
 export type LocalUsageModel = {
   model: string;
   tokens: number;
+  inputTokens: number;
+  cachedInputTokens: number;
+  outputTokens: number;
   sharePercent: number;
+};
+
+export type LocalUsageModelBreakdown = {
+  last7Days: LocalUsageModel[];
+  last30Days: LocalUsageModel[];
+  allTime: LocalUsageModel[];
 };
 
 export type LocalUsageSnapshot = {
   updatedAt: number;
   days: LocalUsageDay[];
   totals: LocalUsageTotals;
+  modelUsage: LocalUsageModelBreakdown;
   topModels: LocalUsageModel[];
 };
 

@@ -35,7 +35,57 @@ type HomeProps = {
   usageWorkspaceOptions: UsageWorkspaceOption[];
   onUsageWorkspaceChange: (workspaceId: string | null) => void;
   onSelectThread: (workspaceId: string, threadId: string) => void;
+  accountPlanType?: string | null;
 };
+
+type ModelApiPricing = {
+  input: number;
+  cachedInput: number;
+  output: number;
+  assumedFrom?: string;
+};
+
+type ModelCostPreviewRow = {
+  model: string;
+  inputTokens: number;
+  cachedInputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+  pricing: ModelApiPricing | null;
+  estimatedCostUsd: number | null;
+};
+
+type ModelCostPreviewData = {
+  rows: ModelCostPreviewRow[];
+  pricedModelCount: number;
+  unpricedModelCount: number;
+  estimatedTotalUsd: number | null;
+};
+
+const MODEL_API_PRICING_PER_1M: Record<string, ModelApiPricing> = {
+  "gpt-5.3-codex": {
+    input: 1.75,
+    cachedInput: 0.175,
+    output: 14.0,
+    assumedFrom: "gpt-5.2-codex",
+  },
+  "gpt-5.2-codex": { input: 1.75, cachedInput: 0.175, output: 14.0 },
+  "gpt-5.1-codex-mini": { input: 0.25, cachedInput: 0.025, output: 2.0 },
+  "gpt-5-codex-mini": {
+    input: 0.25,
+    cachedInput: 0.025,
+    output: 2.0,
+    assumedFrom: "gpt-5.1-codex-mini",
+  },
+  "gpt-5.1-codex-max": { input: 1.25, cachedInput: 0.125, output: 10.0 },
+  "gpt-5.1-codex": { input: 1.25, cachedInput: 0.125, output: 10.0 },
+  "gpt-5-codex": { input: 1.25, cachedInput: 0.125, output: 10.0 },
+  "gpt-5.2": { input: 1.75, cachedInput: 0.175, output: 14.0 },
+  "gpt-5.1": { input: 1.25, cachedInput: 0.125, output: 10.0 },
+  "gpt-5": { input: 1.25, cachedInput: 0.125, output: 10.0 },
+};
+
+const normalizeModelKey = (model: string) => model.trim().toLowerCase();
 
 export function Home({
   onOpenProject,
@@ -52,6 +102,7 @@ export function Home({
   usageWorkspaceOptions,
   onUsageWorkspaceChange,
   onSelectThread,
+  accountPlanType,
 }: HomeProps) {
   const formatCompactNumber = (value: number | null | undefined) => {
     if (value === null || value === undefined) {
@@ -130,6 +181,19 @@ export function Home({
     }).format(date);
   };
 
+  const formatUsd = (value: number | null | undefined) => {
+    if (value === null || value === undefined) {
+      return "--";
+    }
+    const maxFractionDigits = value < 0.01 ? 4 : 2;
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: maxFractionDigits,
+    }).format(value);
+  };
+
   const usageTotals = localUsageSnapshot?.totals ?? null;
   const usageDays = localUsageSnapshot?.days ?? [];
   const last7Days = usageDays.slice(-7);
@@ -173,6 +237,127 @@ export function Home({
     : null;
   const showUsageSkeleton = isLoadingLocalUsage && !localUsageSnapshot;
   const showUsageEmpty = !isLoadingLocalUsage && !localUsageSnapshot;
+  const buildModelCostPreview = (
+    modelUsage: Array<{
+      model: string;
+      inputTokens: number;
+      cachedInputTokens: number;
+      outputTokens: number;
+    }>,
+  ): ModelCostPreviewData => {
+    const rows = modelUsage
+      .map((entry) => {
+        const inputTokens = Math.max(0, entry.inputTokens ?? 0);
+        const cachedInputTokens = Math.max(
+          0,
+          Math.min(entry.cachedInputTokens ?? 0, inputTokens),
+        );
+        const outputTokens = Math.max(0, entry.outputTokens ?? 0);
+        const totalTokens = Math.max(0, inputTokens + outputTokens);
+        const pricing = MODEL_API_PRICING_PER_1M[normalizeModelKey(entry.model)] ?? null;
+        const uncachedInputTokens = Math.max(0, inputTokens - cachedInputTokens);
+        const estimatedCostUsd = pricing
+          ? (uncachedInputTokens / 1_000_000) * pricing.input +
+            (cachedInputTokens / 1_000_000) * pricing.cachedInput +
+            (outputTokens / 1_000_000) * pricing.output
+          : null;
+        return {
+          model: entry.model,
+          inputTokens,
+          cachedInputTokens,
+          outputTokens,
+          totalTokens,
+          pricing,
+          estimatedCostUsd,
+        };
+      })
+      .sort((left, right) => right.totalTokens - left.totalTokens);
+    const pricedRows = rows.filter((row) => row.estimatedCostUsd !== null);
+    return {
+      rows,
+      pricedModelCount: pricedRows.length,
+      unpricedModelCount: rows.length - pricedRows.length,
+      estimatedTotalUsd:
+        pricedRows.length > 0
+          ? pricedRows.reduce((sum, row) => sum + (row.estimatedCostUsd ?? 0), 0)
+          : null,
+    };
+  };
+
+  const allTimeModelUsage = localUsageSnapshot?.modelUsage?.allTime ?? localUsageSnapshot?.topModels ?? [];
+  const last30ModelUsage = localUsageSnapshot?.modelUsage?.last30Days ?? [];
+  const last7ModelUsage = localUsageSnapshot?.modelUsage?.last7Days ?? [];
+
+  const allTimeCostPreview = buildModelCostPreview(allTimeModelUsage);
+  const last30CostPreview = buildModelCostPreview(last30ModelUsage);
+  const last7CostPreview = buildModelCostPreview(last7ModelUsage);
+  const normalizedPlanType = (accountPlanType ?? "").trim().toLowerCase();
+  const matchedPlan = normalizedPlanType.includes("pro")
+    ? { label: "ChatGPT Pro", monthlyCostUsd: 200 }
+    : normalizedPlanType.includes("plus")
+      ? { label: "ChatGPT Plus", monthlyCostUsd: 20 }
+      : null;
+  const savingsApiEquivalent30dUsd = last30CostPreview.estimatedTotalUsd;
+  const savingsPlanCostUsd = matchedPlan?.monthlyCostUsd ?? null;
+  const savingsDelta30dUsd =
+    savingsApiEquivalent30dUsd !== null && savingsPlanCostUsd !== null
+      ? savingsApiEquivalent30dUsd - savingsPlanCostUsd
+      : null;
+
+  const modelUsageChipRows = [...allTimeModelUsage]
+    .sort((left, right) => right.tokens - left.tokens)
+    .filter((model) => normalizeModelKey(model.model) !== "unknown")
+    .slice(0, 4);
+
+  const renderCostPreview = (label: string, preview: ModelCostPreviewData) => (
+    <div className="home-usage-cost-preview" role="tooltip">
+      <div className="home-usage-cost-preview-title">
+        API price preview ({label})
+      </div>
+      <div className="home-usage-cost-preview-total">
+        Estimated total: {formatUsd(preview.estimatedTotalUsd)}
+      </div>
+      <div className="home-usage-cost-preview-meta">
+        Based on {preview.pricedModelCount} priced model
+        {preview.pricedModelCount === 1 ? "" : "s"}
+        {preview.unpricedModelCount > 0
+          ? ` · ${preview.unpricedModelCount} model${preview.unpricedModelCount === 1 ? "" : "s"} without mapped API pricing`
+          : ""}
+      </div>
+      <div className="home-usage-cost-preview-list">
+        {preview.rows.length > 0 ? (
+          preview.rows.map((model) => (
+            <div className="home-usage-cost-preview-row" key={`${label}-${model.model}`}>
+              <div className="home-usage-cost-preview-model">
+                {model.model}
+                {model.pricing?.assumedFrom ? (
+                  <span className="home-usage-cost-preview-note">
+                    (assumed as {model.pricing.assumedFrom})
+                  </span>
+                ) : null}
+              </div>
+              <div className="home-usage-cost-preview-tokens">
+                in {formatCount(model.inputTokens)} · cached{" "}
+                {formatCount(model.cachedInputTokens)} · out {formatCount(model.outputTokens)}
+              </div>
+              <div className="home-usage-cost-preview-price">
+                {model.estimatedCostUsd !== null
+                  ? formatUsd(model.estimatedCostUsd)
+                  : "No price mapping"}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="home-usage-cost-preview-empty">
+            No model usage data yet.
+          </div>
+        )}
+      </div>
+      <div className="home-usage-cost-preview-footnote">
+        Rates are USD per 1M tokens.
+      </div>
+    </div>
+  );
 
   return (
     <div className="home">
@@ -367,7 +552,7 @@ export function Home({
             <div className="home-usage-grid">
               {usageMetric === "tokens" ? (
                 <>
-                  <div className="home-usage-card">
+                  <div className="home-usage-card home-usage-card-with-preview" tabIndex={0}>
                     <div className="home-usage-label">Last 7 days</div>
                     <div className="home-usage-value">
                       <span className="home-usage-number">
@@ -378,8 +563,9 @@ export function Home({
                     <div className="home-usage-caption">
                       Avg {formatCompactNumber(usageTotals?.averageDailyTokens)} / day
                     </div>
+                    {renderCostPreview("last 7 days", last7CostPreview)}
                   </div>
-                  <div className="home-usage-card">
+                  <div className="home-usage-card home-usage-card-with-preview" tabIndex={0}>
                     <div className="home-usage-label">Last 30 days</div>
                     <div className="home-usage-value">
                       <span className="home-usage-number">
@@ -390,17 +576,20 @@ export function Home({
                     <div className="home-usage-caption">
                       Total {formatCount(usageTotals?.last30DaysTokens)}
                     </div>
+                    {renderCostPreview("last 30 days", last30CostPreview)}
                   </div>
-                  <div className="home-usage-card">
-                    <div className="home-usage-label">Cache hit rate</div>
+                  <div className="home-usage-card home-usage-card-with-preview" tabIndex={0}>
+                    <div className="home-usage-label">All time</div>
                     <div className="home-usage-value">
                       <span className="home-usage-number">
-                        {usageTotals
-                          ? `${usageTotals.cacheHitRatePercent.toFixed(1)}%`
-                          : "--"}
+                        {formatCompactNumber(usageTotals?.allTimeTokens)}
                       </span>
+                      <span className="home-usage-suffix">tokens</span>
                     </div>
-                    <div className="home-usage-caption">Last 7 days</div>
+                    <div className="home-usage-caption">
+                      Total {formatCount(usageTotals?.allTimeTokens)}
+                    </div>
+                    {renderCostPreview("all time", allTimeCostPreview)}
                   </div>
                   <div className="home-usage-card">
                     <div className="home-usage-label">Peak day</div>
@@ -503,8 +692,8 @@ export function Home({
                 )}
               </div>
               <div className="home-usage-models-list">
-                {localUsageSnapshot?.topModels?.length ? (
-                  localUsageSnapshot.topModels.map((model) => (
+                {modelUsageChipRows.length ? (
+                  modelUsageChipRows.map((model) => (
                     <span
                       className="home-usage-model-chip"
                       key={model.model}
@@ -523,6 +712,30 @@ export function Home({
               {localUsageError && (
                 <div className="home-usage-error">{localUsageError}</div>
               )}
+            </div>
+            <div className="home-usage-savings">
+              <div className="home-usage-savings-label">Estimated 30-day savings</div>
+              <div className="home-usage-savings-value">
+                {formatUsd(savingsDelta30dUsd)}
+              </div>
+              <div className="home-usage-savings-caption">
+                API equivalent {formatUsd(savingsApiEquivalent30dUsd)} vs{" "}
+                {matchedPlan
+                  ? `${matchedPlan.label} (${formatUsd(matchedPlan.monthlyCostUsd)} / month)`
+                  : "recognized plan pricing"}
+              </div>
+              <div className="home-usage-savings-note">
+                {matchedPlan
+                  ? "Positive means subscription is cheaper than equivalent API usage."
+                  : "Plan pricing not detected from current Codex account data yet. Uses priced models only."}
+              </div>
+            </div>
+            <div className="home-usage-footer">
+              <span className="home-usage-footer-label">Cache hit rate</span>
+              <span className="home-usage-footer-value">
+                {usageTotals ? `${usageTotals.cacheHitRatePercent.toFixed(1)}%` : "--"}
+              </span>
+              <span className="home-usage-footer-caption">Last 7 days</span>
             </div>
           </>
         )}
