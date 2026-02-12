@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 
 export type SettingsSection =
   | "projects"
+  | "environments"
   | "display"
   | "dictation"
   | "shortcuts"

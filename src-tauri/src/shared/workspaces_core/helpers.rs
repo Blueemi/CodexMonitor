@@ -7,6 +7,8 @@ use tokio::sync::Mutex;
 use crate::backend::app_server::WorkspaceSession;
 use crate::types::{WorkspaceEntry, WorkspaceInfo};
 
+use super::environment::load_workspace_launch_scripts;
+
 pub(crate) const WORKTREE_SETUP_MARKERS_DIR: &str = "worktree-setup";
 pub(crate) const WORKTREE_SETUP_MARKER_EXT: &str = "ran";
 pub(super) const AGENTS_MD_FILE_NAME: &str = "AGENTS.md";
@@ -74,6 +76,13 @@ pub(crate) async fn list_workspaces_core(
     let sessions = sessions.lock().await;
     let mut result = Vec::new();
     for entry in workspaces.values() {
+        let mut settings = entry.settings.clone();
+        let workspace_root = PathBuf::from(&entry.path);
+        let (launch_script, launch_scripts) =
+            load_workspace_launch_scripts(&workspace_root, &settings);
+        settings.launch_script = launch_script;
+        settings.launch_scripts = launch_scripts;
+
         result.push(WorkspaceInfo {
             id: entry.id.clone(),
             name: entry.name.clone(),
@@ -83,7 +92,7 @@ pub(crate) async fn list_workspaces_core(
             kind: entry.kind.clone(),
             parent_id: entry.parent_id.clone(),
             worktree: entry.worktree.clone(),
-            settings: entry.settings.clone(),
+            settings,
         });
     }
     sort_workspaces(&mut result);

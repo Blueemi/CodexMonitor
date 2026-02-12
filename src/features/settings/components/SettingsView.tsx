@@ -7,6 +7,7 @@ import type {
   CodexDoctorResult,
   CodexUpdateResult,
   DictationModelStatus,
+  LaunchScriptEntry,
   TcpDaemonStatus,
   TailscaleDaemonCommandPreview,
   TailscaleStatus,
@@ -75,6 +76,10 @@ import {
   normalizeWorktreeSetupScript,
   type OrbitActionResult,
 } from "./settingsViewHelpers";
+import {
+  DEFAULT_LAUNCH_SCRIPT_ICON,
+  coerceLaunchScriptIconId,
+} from "../../app/utils/launchScriptIcons";
 
 const formatErrorMessage = (error: unknown, fallback: string) => {
   if (error instanceof Error) {
@@ -90,6 +95,32 @@ const formatErrorMessage = (error: unknown, fallback: string) => {
     }
   }
   return fallback;
+};
+
+const createEnvironmentActionId = () => {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `environment-action-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+};
+
+const normalizeEnvironmentLaunchScripts = (
+  scripts: LaunchScriptEntry[],
+): LaunchScriptEntry[] => {
+  const normalized: LaunchScriptEntry[] = [];
+  scripts.forEach((entry) => {
+    const command = entry.script;
+    if (!command.trim()) {
+      return;
+    }
+    normalized.push({
+      id: entry.id,
+      script: command,
+      icon: coerceLaunchScriptIconId(entry.icon),
+      label: entry.label?.trim() ? entry.label.trim() : null,
+    });
+  });
+  return normalized;
 };
 
 export type SettingsViewProps = {
@@ -191,11 +222,21 @@ export function SettingsView({
   const [environmentSavedScript, setEnvironmentSavedScript] = useState<string | null>(
     null,
   );
+  const [environmentDraftLaunchScripts, setEnvironmentDraftLaunchScripts] = useState<
+    LaunchScriptEntry[]
+  >([]);
+  const [environmentSavedLaunchScripts, setEnvironmentSavedLaunchScripts] = useState<
+    LaunchScriptEntry[]
+  >([]);
   const [environmentLoadedWorkspaceId, setEnvironmentLoadedWorkspaceId] = useState<
     string | null
   >(null);
   const [environmentError, setEnvironmentError] = useState<string | null>(null);
   const [environmentSaving, setEnvironmentSaving] = useState(false);
+  const [environmentActionsError, setEnvironmentActionsError] = useState<string | null>(
+    null,
+  );
+  const [environmentActionsSaving, setEnvironmentActionsSaving] = useState(false);
   const [codexPathDraft, setCodexPathDraft] = useState(appSettings.codexBin ?? "");
   const [codexArgsDraft, setCodexArgsDraft] = useState(appSettings.codexArgs ?? "");
   const [remoteHostDraft, setRemoteHostDraft] = useState(appSettings.remoteBackendHost);
@@ -374,10 +415,23 @@ export function SettingsView({
   const environmentSavedScriptFromWorkspace = useMemo(() => {
     return normalizeWorktreeSetupScript(environmentWorkspace?.settings.worktreeSetupScript);
   }, [environmentWorkspace?.settings.worktreeSetupScript]);
+  const environmentLaunchScriptsFromWorkspace = useMemo(() => {
+    return (environmentWorkspace?.settings.launchScripts ?? []).map((entry, index) => ({
+      id: entry.id?.trim() || `environment-action-${index + 1}`,
+      script: entry.script ?? "",
+      icon: coerceLaunchScriptIconId(entry.icon),
+      label: entry.label ?? null,
+    }));
+  }, [environmentWorkspace?.settings.launchScripts]);
   const environmentDraftNormalized = useMemo(() => {
     return normalizeWorktreeSetupScript(environmentDraftScript);
   }, [environmentDraftScript]);
   const environmentDirty = environmentDraftNormalized !== environmentSavedScript;
+  const environmentActionsDirty = useMemo(() => {
+    const normalizedDraft = normalizeEnvironmentLaunchScripts(environmentDraftLaunchScripts);
+    const normalizedSaved = normalizeEnvironmentLaunchScripts(environmentSavedLaunchScripts);
+    return JSON.stringify(normalizedDraft) !== JSON.stringify(normalizedSaved);
+  }, [environmentDraftLaunchScripts, environmentSavedLaunchScripts]);
   const hasCodexHomeOverrides = useMemo(
     () => projects.some((workspace) => workspace.settings.codexHome != null),
     [projects],
@@ -537,8 +591,12 @@ export function SettingsView({
       setEnvironmentLoadedWorkspaceId(null);
       setEnvironmentSavedScript(null);
       setEnvironmentDraftScript("");
+      setEnvironmentSavedLaunchScripts([]);
+      setEnvironmentDraftLaunchScripts([]);
       setEnvironmentError(null);
       setEnvironmentSaving(false);
+      setEnvironmentActionsError(null);
+      setEnvironmentActionsSaving(false);
       return;
     }
 
@@ -556,7 +614,10 @@ export function SettingsView({
       setEnvironmentLoadedWorkspaceId(environmentWorkspace.id);
       setEnvironmentSavedScript(environmentSavedScriptFromWorkspace);
       setEnvironmentDraftScript(environmentSavedScriptFromWorkspace ?? "");
+      setEnvironmentSavedLaunchScripts(environmentLaunchScriptsFromWorkspace);
+      setEnvironmentDraftLaunchScripts(environmentLaunchScriptsFromWorkspace);
       setEnvironmentError(null);
+      setEnvironmentActionsError(null);
       return;
     }
 
@@ -565,10 +626,22 @@ export function SettingsView({
       setEnvironmentDraftScript(environmentSavedScriptFromWorkspace ?? "");
       setEnvironmentError(null);
     }
+    if (
+      !environmentActionsDirty &&
+      JSON.stringify(environmentSavedLaunchScripts) !==
+        JSON.stringify(environmentLaunchScriptsFromWorkspace)
+    ) {
+      setEnvironmentSavedLaunchScripts(environmentLaunchScriptsFromWorkspace);
+      setEnvironmentDraftLaunchScripts(environmentLaunchScriptsFromWorkspace);
+      setEnvironmentActionsError(null);
+    }
   }, [
+    environmentActionsDirty,
     environmentDirty,
     environmentLoadedWorkspaceId,
+    environmentLaunchScriptsFromWorkspace,
     environmentSavedScript,
+    environmentSavedLaunchScripts,
     environmentSavedScriptFromWorkspace,
     environmentWorkspace,
   ]);
@@ -1221,6 +1294,86 @@ export function SettingsView({
     }
   };
 
+  const handleAddEnvironmentAction = () => {
+    setEnvironmentDraftLaunchScripts((prev) => [
+      ...prev,
+      {
+        id: createEnvironmentActionId(),
+        script: "",
+        icon: DEFAULT_LAUNCH_SCRIPT_ICON,
+        label: null,
+      },
+    ]);
+    setEnvironmentActionsError(null);
+  };
+
+  const handleRemoveEnvironmentAction = (id: string) => {
+    setEnvironmentDraftLaunchScripts((prev) =>
+      prev.filter((entry) => entry.id !== id),
+    );
+    setEnvironmentActionsError(null);
+  };
+
+  const handleUpdateEnvironmentActionLabel = (id: string, value: string) => {
+    setEnvironmentDraftLaunchScripts((prev) =>
+      prev.map((entry) =>
+        entry.id === id ? { ...entry, label: value } : entry,
+      ),
+    );
+  };
+
+  const handleUpdateEnvironmentActionIcon = (id: string, value: string) => {
+    setEnvironmentDraftLaunchScripts((prev) =>
+      prev.map((entry) =>
+        entry.id === id ? { ...entry, icon: coerceLaunchScriptIconId(value) } : entry,
+      ),
+    );
+  };
+
+  const handleUpdateEnvironmentActionScript = (id: string, value: string) => {
+    setEnvironmentDraftLaunchScripts((prev) =>
+      prev.map((entry) =>
+        entry.id === id ? { ...entry, script: value } : entry,
+      ),
+    );
+  };
+
+  const handleResetEnvironmentActions = () => {
+    setEnvironmentDraftLaunchScripts(environmentSavedLaunchScripts);
+    setEnvironmentActionsError(null);
+  };
+
+  const handleSaveEnvironmentActions = async () => {
+    if (!environmentWorkspace || environmentActionsSaving) {
+      return;
+    }
+    if (
+      environmentDraftLaunchScripts.some((entry) => !entry.script.trim())
+    ) {
+      setEnvironmentActionsError("Each action must include a command.");
+      return;
+    }
+    const nextScripts = normalizeEnvironmentLaunchScripts(
+      environmentDraftLaunchScripts,
+    );
+    setEnvironmentActionsSaving(true);
+    setEnvironmentActionsError(null);
+    try {
+      await onUpdateWorkspaceSettings(environmentWorkspace.id, {
+        launchScripts: nextScripts,
+        launchScript: nextScripts[0]?.script ?? null,
+      });
+      setEnvironmentSavedLaunchScripts(nextScripts);
+      setEnvironmentDraftLaunchScripts(nextScripts);
+    } catch (error) {
+      setEnvironmentActionsError(
+        error instanceof Error ? error.message : String(error),
+      );
+    } finally {
+      setEnvironmentActionsSaving(false);
+    }
+  };
+
   const trimmedGroupName = newGroupName.trim();
   const canCreateGroup = Boolean(trimmedGroupName);
 
@@ -1390,9 +1543,20 @@ export function SettingsView({
               environmentDraftScript={environmentDraftScript}
               environmentSavedScript={environmentSavedScript}
               environmentDirty={environmentDirty}
+              environmentActionsDraft={environmentDraftLaunchScripts}
+              environmentActionsDirty={environmentActionsDirty}
+              environmentActionsSaving={environmentActionsSaving}
+              environmentActionsError={environmentActionsError}
               onSetEnvironmentWorkspaceId={setEnvironmentWorkspaceId}
               onSetEnvironmentDraftScript={setEnvironmentDraftScript}
               onSaveEnvironmentSetup={handleSaveEnvironmentSetup}
+              onAddEnvironmentAction={handleAddEnvironmentAction}
+              onRemoveEnvironmentAction={handleRemoveEnvironmentAction}
+              onUpdateEnvironmentActionLabel={handleUpdateEnvironmentActionLabel}
+              onUpdateEnvironmentActionIcon={handleUpdateEnvironmentActionIcon}
+              onUpdateEnvironmentActionScript={handleUpdateEnvironmentActionScript}
+              onResetEnvironmentActions={handleResetEnvironmentActions}
+              onSaveEnvironmentActions={handleSaveEnvironmentActions}
             />
           )}
           {activeSection === "display" && (

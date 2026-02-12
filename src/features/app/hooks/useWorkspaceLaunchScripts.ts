@@ -33,6 +33,7 @@ type UseWorkspaceLaunchScriptsOptions = {
 
 export type WorkspaceLaunchScriptsState = {
   launchScripts: LaunchScriptEntry[];
+  onSelectScript: (id: string) => Promise<void>;
   editorOpenId: string | null;
   draftScript: string;
   draftIcon: LaunchScriptIconId;
@@ -198,6 +199,7 @@ export function useWorkspaceLaunchScripts({
       await updateWorkspaceSettings(activeWorkspace.id, {
         ...activeWorkspace.settings,
         launchScripts: nextScripts,
+        launchScript: nextScripts[0]?.script ?? null,
       });
       setNewEditorOpen(false);
     } catch (err) {
@@ -242,6 +244,7 @@ export function useWorkspaceLaunchScripts({
       await updateWorkspaceSettings(activeWorkspace.id, {
         ...activeWorkspace.settings,
         launchScripts: nextScripts,
+        launchScript: nextScripts[0]?.script ?? null,
       });
       setEditorOpenId(null);
     } catch (err) {
@@ -273,6 +276,7 @@ export function useWorkspaceLaunchScripts({
       await updateWorkspaceSettings(activeWorkspace.id, {
         ...activeWorkspace.settings,
         launchScripts: nextScripts,
+        launchScript: nextScripts[0]?.script ?? null,
       });
       setEditorOpenId(null);
     } catch (err) {
@@ -324,6 +328,43 @@ export function useWorkspaceLaunchScripts({
     ],
   );
 
+  const onSelectScript = useCallback(
+    async (id: string) => {
+      if (!activeWorkspace) {
+        return;
+      }
+      const selectedIndex = launchScripts.findIndex((entry) => entry.id === id);
+      if (selectedIndex <= 0) {
+        return;
+      }
+      const selected = launchScripts[selectedIndex];
+      if (!selected) {
+        return;
+      }
+      const nextScripts = [
+        selected,
+        ...launchScripts.slice(0, selectedIndex),
+        ...launchScripts.slice(selectedIndex + 1),
+      ];
+      setIsSaving(true);
+      setError(null);
+      try {
+        await updateWorkspaceSettings(activeWorkspace.id, {
+          ...activeWorkspace.settings,
+          launchScripts: nextScripts,
+          launchScript: nextScripts[0]?.script ?? null,
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        setError(message);
+        setErrorById((prev) => ({ ...prev, [id]: message }));
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [activeWorkspace, launchScripts, updateWorkspaceSettings],
+  );
+
   useEffect(() => {
     const pending = pendingRunRef.current;
     const pendingKey = pending
@@ -353,6 +394,7 @@ export function useWorkspaceLaunchScripts({
 
   return {
     launchScripts,
+    onSelectScript,
     editorOpenId,
     draftScript,
     draftIcon,

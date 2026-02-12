@@ -142,6 +142,7 @@ export type LayoutNodesOptions = {
   onPlanAccept?: () => void;
   onPlanSubmitChanges?: (changes: string) => void;
   onOpenSettings: () => void;
+  onOpenEnvironmentSettings: () => void;
   onOpenDictationSettings?: () => void;
   onOpenDebug: () => void;
   showDebugButton: boolean;

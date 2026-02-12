@@ -1890,6 +1890,7 @@ function MainApp() {
     onPlanAccept: handlePlanAccept,
     onPlanSubmitChanges: handlePlanSubmitChanges,
     onOpenSettings: () => openSettingsPanel(),
+    onOpenEnvironmentSettings: () => openSettingsPanel("environments"),
     onOpenDictationSettings: () => openSettingsPanel("dictation"),
     onOpenDebug: handleDebugClick,
     showDebugButton,

@@ -277,6 +277,14 @@ const renderEnvironmentsSection = (
               settings: {
                 sidebarCollapsed: false,
                 worktreeSetupScript: "echo one",
+                launchScripts: [
+                  {
+                    id: "action-1",
+                    label: "Run",
+                    icon: "play",
+                    script: "npm run dev",
+                  },
+                ],
               },
             }),
           ],
@@ -568,6 +576,29 @@ describe("SettingsView Environments", () => {
         delete (navigator as any).clipboard;
       }
     }
+  });
+
+  it("saves one-click actions for the selected project", async () => {
+    const onUpdateWorkspaceSettings = vi.fn().mockResolvedValue(undefined);
+    renderEnvironmentsSection({ onUpdateWorkspaceSettings });
+
+    const actionCommand = screen.getByDisplayValue("npm run dev");
+    fireEvent.change(actionCommand, { target: { value: "npm run test" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save actions" }));
+
+    await waitFor(() => {
+      expect(onUpdateWorkspaceSettings).toHaveBeenCalledWith("w1", {
+        launchScripts: [
+          {
+            id: "action-1",
+            label: "Run",
+            icon: "play",
+            script: "npm run test",
+          },
+        ],
+        launchScript: "npm run test",
+      });
+    });
   });
 });
 

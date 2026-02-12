@@ -261,4 +261,32 @@ describe("useWorkspaceLaunchScripts", () => {
 
     expect(result.current.draftIcon).toBe("play");
   });
+
+  it("moves selected script to primary position", async () => {
+    const scripts: LaunchScriptEntry[] = [
+      { id: "one", script: "npm run dev", icon: "play", label: "Run" },
+      { id: "two", script: "npm run test", icon: "test", label: "Tests" },
+    ];
+    const workspace = makeWorkspace(scripts);
+    const updateWorkspaceSettings = vi.fn().mockResolvedValue(workspace);
+
+    const { result } = renderHook(() =>
+      useWorkspaceLaunchScripts({
+        activeWorkspace: workspace,
+        updateWorkspaceSettings,
+        openTerminal: vi.fn(),
+        ensureLaunchTerminal: vi.fn(() => "launch"),
+        restartLaunchSession: vi.fn().mockResolvedValue(undefined),
+        terminalState,
+        activeTerminalId: null,
+      }),
+    );
+
+    await act(async () => {
+      await result.current.onSelectScript("two");
+    });
+
+    const nextScripts = getUpdatedLaunchScripts(updateWorkspaceSettings);
+    expect(nextScripts.map((entry) => entry.id)).toEqual(["two", "one"]);
+  });
 });

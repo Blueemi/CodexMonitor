@@ -1,5 +1,6 @@
 mod connect;
 mod crud_persistence;
+mod environment;
 mod git_orchestration;
 mod helpers;
 mod io;

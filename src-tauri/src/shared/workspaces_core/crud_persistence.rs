@@ -15,6 +15,7 @@ use crate::storage::write_workspaces;
 use crate::types::{AppSettings, WorkspaceEntry, WorkspaceInfo, WorkspaceKind, WorkspaceSettings};
 
 use super::connect::kill_session_by_id;
+use super::environment::{launch_scripts_changed, persist_workspace_launch_scripts};
 use super::helpers::normalize_setup_script;
 
 pub(crate) async fn add_workspace_core<F, Fut>(
@@ -343,6 +344,19 @@ where
     FutSpawn: Future<Output = Result<Arc<WorkspaceSession>, String>>,
 {
     settings.worktree_setup_script = normalize_setup_script(settings.worktree_setup_script);
+
+    let (workspace_root, previous_settings) = {
+        let workspaces = workspaces.lock().await;
+        let entry = workspaces
+            .get(&id)
+            .cloned()
+            .ok_or_else(|| "workspace not found".to_string())?;
+        (PathBuf::from(entry.path), entry.settings)
+    };
+
+    if launch_scripts_changed(&previous_settings, &settings) {
+        persist_workspace_launch_scripts(&workspace_root, &settings)?;
+    }
 
     let (
         previous_entry,

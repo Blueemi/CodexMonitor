@@ -278,6 +278,7 @@ export function buildPrimaryNodes(options: LayoutNodesOptions): PrimaryLayoutNod
       onLaunchScriptDraftChange={options.onLaunchScriptDraftChange}
       onSaveLaunchScript={options.onSaveLaunchScript}
       launchScriptsState={options.launchScriptsState}
+      onOpenEnvironmentSettings={options.onOpenEnvironmentSettings}
       extraActionsNode={options.mainHeaderActionsNode}
     />
   ) : null;

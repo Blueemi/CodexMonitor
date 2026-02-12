@@ -424,7 +424,7 @@ pub(crate) struct WorkspaceSettings {
     pub(crate) worktree_setup_script: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub(crate) struct LaunchScriptEntry {
     pub(crate) id: String,
     pub(crate) script: String,

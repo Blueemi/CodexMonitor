@@ -6,16 +6,16 @@ name = "CodexMonitor"
 script = "npm install"
 
 [[actions]]
+name = "Run"
+icon = "play"
+command = "sh -lc 'PID=/tmp/codexmonitor-tauri-dev.pid; LOG=/tmp/codexmonitor-tauri-dev.log; BUN=/opt/homebrew/bin/bun; [ -s \"$PID\" ] && kill -TERM \"$(cat \"$PID\")\" 2>/dev/null || true; pkill -f \"[b]un run tauri dev\" 2>/dev/null || true; pkill -f \"[b]un tauri dev\" 2>/dev/null || true; pkill -f \"[c]argo tauri dev\" 2>/dev/null || true; pkill -f \"target/debug/codex-monitor\" 2>/dev/null || true; for P in $(lsof -tiTCP:1420 -sTCP:LISTEN 2>/dev/null); do kill -KILL \"$P\" 2>/dev/null || true; done; cd /Users/blueemi/Developer/CodexMonitor || exit 1; nohup \"$BUN\" run tauri dev >\"$LOG\" 2>&1 & echo $! > \"$PID\"'"
+
+[[actions]]
 name = "Tests"
 icon = "test"
-command = '''
+command = """
 npm run typecheck
 npm run lint
 npm run test
 cd src-tauri && cargo check
-'''
-
-[[actions]]
-name = "Run"
-icon = "run"
-command = "sh -lc 'PID=/tmp/codexmonitor-tauri-dev.pid; LOG=/tmp/codexmonitor-tauri-dev.log; BUN=/opt/homebrew/bin/bun; [ -s \"$PID\" ] && kill -TERM \"$(cat \"$PID\")\" 2>/dev/null || true; pkill -f \"[b]un run tauri dev\" 2>/dev/null || true; pkill -f \"[b]un tauri dev\" 2>/dev/null || true; pkill -f \"[c]argo tauri dev\" 2>/dev/null || true; pkill -f \"target/debug/codex-monitor\" 2>/dev/null || true; for P in $(lsof -tiTCP:1420 -sTCP:LISTEN 2>/dev/null); do kill -KILL \"$P\" 2>/dev/null || true; done; cd /Users/blueemi/Developer/CodexMonitor || exit 1; nohup \"$BUN\" run tauri dev >\"$LOG\" 2>&1 & echo $! > \"$PID\"'"
+"""

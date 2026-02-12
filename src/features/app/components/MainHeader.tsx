@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Check from "lucide-react/dist/esm/icons/check";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import Copy from "lucide-react/dist/esm/icons/copy";
+import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
+import Plus from "lucide-react/dist/esm/icons/plus";
 import Terminal from "lucide-react/dist/esm/icons/terminal";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import type { BranchInfo, OpenAppTarget, WorkspaceInfo } from "../../../types";
@@ -12,8 +15,8 @@ import { validateBranchName } from "../../git/utils/branchValidation";
 import { PopoverSurface } from "../../design-system/components/popover/PopoverPrimitives";
 import { OpenAppMenu } from "./OpenAppMenu";
 import { LaunchScriptButton } from "./LaunchScriptButton";
-import { LaunchScriptEntryButton } from "./LaunchScriptEntryButton";
 import type { WorkspaceLaunchScriptsState } from "../hooks/useWorkspaceLaunchScripts";
+import { getLaunchScriptIcon } from "../utils/launchScriptIcons";
 import { useDismissibleMenu } from "../hooks/useDismissibleMenu";
 
 type MainHeaderProps = {
@@ -49,6 +52,7 @@ type MainHeaderProps = {
   onLaunchScriptDraftChange?: (value: string) => void;
   onSaveLaunchScript?: () => void;
   launchScriptsState?: WorkspaceLaunchScriptsState;
+  onOpenEnvironmentSettings?: () => void;
   worktreeRename?: {
     name: string;
     error: string | null;
@@ -102,6 +106,7 @@ export function MainHeader({
   onLaunchScriptDraftChange,
   onSaveLaunchScript,
   launchScriptsState,
+  onOpenEnvironmentSettings,
   worktreeRename,
 }: MainHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -109,12 +114,18 @@ export function MainHeader({
   const [branchQuery, setBranchQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [copyFeedback, setCopyFeedback] = useState(false);
+  const [launchSelectorOpen, setLaunchSelectorOpen] = useState(false);
   const copyTimeoutRef = useRef<number | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const infoRef = useRef<HTMLDivElement | null>(null);
+  const launchSelectorRef = useRef<HTMLDivElement | null>(null);
   const renameInputRef = useRef<HTMLInputElement | null>(null);
   const renameConfirmRef = useRef<HTMLButtonElement | null>(null);
   const renameOnCancel = worktreeRename?.onCancel;
+  const launchScripts = launchScriptsState?.launchScripts ?? [];
+  const primaryLaunchScript = launchScripts[0] ?? null;
+  const PrimaryLaunchIcon = getLaunchScriptIcon(primaryLaunchScript?.icon);
+  const EnvironmentIcon = getLaunchScriptIcon("config");
 
   const trimmedQuery = branchQuery.trim();
   const filteredBranches = useMemo(
@@ -160,6 +171,12 @@ export function MainHeader({
     onClose: () => setInfoOpen(false),
   });
 
+  useDismissibleMenu({
+    isOpen: launchSelectorOpen,
+    containerRef: launchSelectorRef,
+    onClose: () => setLaunchSelectorOpen(false),
+  });
+
   useEffect(() => {
     if (!infoOpen && renameOnCancel) {
       renameOnCancel();
@@ -173,6 +190,10 @@ export function MainHeader({
       }
     };
   }, []);
+
+  useEffect(() => {
+    setLaunchSelectorOpen(false);
+  }, [workspace.id]);
 
   const handleCopyClick = async () => {
     if (!onCopyThread) {
@@ -190,6 +211,18 @@ export function MainHeader({
     } catch {
       // Errors are handled upstream in the copy handler.
     }
+  };
+
+  const openEnvironmentActions = () => {
+    if (onOpenEnvironmentSettings) {
+      onOpenEnvironmentSettings();
+      return;
+    }
+    if (launchScriptsState?.onOpenNew) {
+      launchScriptsState.onOpenNew();
+      return;
+    }
+    onOpenLaunchScriptEditor?.();
   };
 
   return (
@@ -488,7 +521,112 @@ export function MainHeader({
         </div>
       </div>
       <div className="main-header-actions">
+        {showWorkspaceTools && primaryLaunchScript && launchScriptsState ? (
+          <div className="launch-script-cluster" ref={launchSelectorRef}>
+            <div className="launch-script-trigger">
+              <button
+                type="button"
+                className="ghost main-header-action launch-script-run launch-script-trigger-main"
+                onClick={() => launchScriptsState.onRunScript(primaryLaunchScript.id)}
+                data-tauri-drag-region="false"
+                aria-label={
+                  primaryLaunchScript.label?.trim() || "Run selected launch action"
+                }
+                title={primaryLaunchScript.label?.trim() || "Run selected launch action"}
+              >
+                <PrimaryLaunchIcon size={14} aria-hidden />
+              </button>
+              <button
+                type="button"
+                className={`ghost main-header-action launch-script-reveal launch-script-trigger-toggle${
+                  launchSelectorOpen ? " is-open" : ""
+                }`}
+                onClick={() => setLaunchSelectorOpen((prev) => !prev)}
+                data-tauri-drag-region="false"
+                aria-label="Select launch action"
+                title="Select launch action"
+              >
+                <ChevronDown size={14} aria-hidden />
+              </button>
+            </div>
+            {launchSelectorOpen ? (
+              <PopoverSurface className="launch-script-switcher" role="menu">
+                <div className="launch-script-switcher-title">{workspace.name} actions</div>
+                <div className="launch-script-switcher-list">
+                  {launchScripts.map((entry, index) => {
+                    const isSelected = index === 0;
+                    const Icon = getLaunchScriptIcon(entry.icon);
+                    const label = entry.label?.trim() || "Launch action";
+                    return (
+                      <button
+                        key={entry.id}
+                        type="button"
+                        className={`ghost launch-script-switcher-option${
+                          isSelected ? " is-selected" : ""
+                        }`}
+                        onClick={() => {
+                          if (!isSelected) {
+                            void launchScriptsState.onSelectScript(entry.id);
+                          }
+                          setLaunchSelectorOpen(false);
+                        }}
+                        data-tauri-drag-region="false"
+                        role="menuitem"
+                        title={
+                          isSelected
+                            ? `${label} is the active action`
+                            : `Use ${label} as primary action`
+                        }
+                      >
+                        <Icon size={14} aria-hidden />
+                        <span>{label}</span>
+                        {isSelected ? (
+                          <Check
+                            className="launch-script-switcher-check"
+                            size={16}
+                            aria-hidden
+                          />
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    className="ghost launch-script-switcher-option launch-script-switcher-add"
+                    onClick={() => {
+                      setLaunchSelectorOpen(false);
+                      openEnvironmentActions();
+                    }}
+                    data-tauri-drag-region="false"
+                    role="menuitem"
+                    title="Add action"
+                  >
+                    <Plus size={16} aria-hidden />
+                    <span>Add action</span>
+                  </button>
+                </div>
+                <div className="launch-script-switcher-divider" />
+                <button
+                  type="button"
+                  className="ghost launch-script-switcher-option launch-script-switcher-change"
+                  onClick={() => {
+                    setLaunchSelectorOpen(false);
+                    openEnvironmentActions();
+                  }}
+                  data-tauri-drag-region="false"
+                  role="menuitem"
+                  title="Change environment"
+                >
+                  <EnvironmentIcon size={14} aria-hidden />
+                  <span>Change environment</span>
+                  <ChevronRight size={16} aria-hidden />
+                </button>
+              </PopoverSurface>
+            ) : null}
+          </div>
+        ) : null}
         {showWorkspaceTools &&
+          !primaryLaunchScript &&
           onRunLaunchScript &&
           onOpenLaunchScriptEditor &&
           onCloseLaunchScriptEditor &&
@@ -519,26 +657,6 @@ export function MainHeader({
                 onNewDraftLabelChange={launchScriptsState?.onNewDraftLabelChange}
                 onCreateNew={launchScriptsState?.onCreateNew}
               />
-              {launchScriptsState?.launchScripts.map((entry) => (
-                <LaunchScriptEntryButton
-                  key={entry.id}
-                  entry={entry}
-                  editorOpen={launchScriptsState.editorOpenId === entry.id}
-                  draftScript={launchScriptsState.draftScript}
-                  draftIcon={launchScriptsState.draftIcon}
-                  draftLabel={launchScriptsState.draftLabel}
-                  isSaving={launchScriptsState.isSaving}
-                  error={launchScriptsState.errorById[entry.id] ?? null}
-                  onRun={() => launchScriptsState.onRunScript(entry.id)}
-                  onOpenEditor={() => launchScriptsState.onOpenEditor(entry.id)}
-                  onCloseEditor={launchScriptsState.onCloseEditor}
-                  onDraftChange={launchScriptsState.onDraftScriptChange}
-                  onDraftIconChange={launchScriptsState.onDraftIconChange}
-                  onDraftLabelChange={launchScriptsState.onDraftLabelChange}
-                  onSave={launchScriptsState.onSaveScript}
-                  onDelete={launchScriptsState.onDeleteScript}
-                />
-              ))}
             </div>
           )}
         {showWorkspaceTools ? (
