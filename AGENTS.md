@@ -99,6 +99,8 @@ Do not reintroduce duplicated modal/toast/panel/popover shell styling in feature
 - If unrelated changes appear, continue focusing on owned files unless they block correctness.
 - If conflicts impact correctness, call them out and choose the safest path.
 - Fix root cause, not band-aids.
+- For upstream syncs, merge from canonical `upstream` (not fork remotes) and keep technical/backend changes only by default.
+- Do not bring upstream UI-layer changes (for example component layout/styling updates) unless explicitly requested.
 
 ## Validation Matrix
 
