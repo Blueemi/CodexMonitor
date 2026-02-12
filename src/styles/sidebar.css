@@ -816,14 +816,14 @@
 .thread-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 3px;
   margin-left: 0;
 }
 
 .pinned-section {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 3px;
   margin-bottom: 4px;
 }
 
@@ -838,7 +838,7 @@
 .thread-loading {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 3px;
   padding: 6px 6px 4px;
 }
 
@@ -871,11 +871,11 @@
 .thread-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 11px 8px calc(11px + var(--thread-indent, 0px));
+  gap: 7px;
+  padding: 5px 10px 5px calc(10px + var(--thread-indent, 0px));
   border-radius: 12px;
   color: rgba(255, 255, 255, 0.9);
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 400;
   line-height: 1.2;
   text-align: left;
@@ -922,7 +922,7 @@
 
 .thread-time {
   color: var(--text-subtle);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 400;
   white-space: nowrap;
 }
@@ -931,7 +931,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 400;
   white-space: nowrap;
 }

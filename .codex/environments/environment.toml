@@ -18,4 +18,4 @@ cd src-tauri && cargo check
 [[actions]]
 name = "Run"
 icon = "run"
-command = "sh -lc 'pkill -f \"[n]pm run tauri dev|[c]argo tauri dev\" 2>/dev/null || true; cd /Users/blueemi/Developer/CodexMonitor; nohup npm run tauri dev >/tmp/codexmonitor-tauri-dev.log 2>&1 &'"
+command = "sh -lc 'PID=/tmp/codexmonitor-tauri-dev.pid; LOG=/tmp/codexmonitor-tauri-dev.log; BUN=/opt/homebrew/bin/bun; if [ -s \"$PID\" ]; then OLD=$(cat \"$PID\"); kill -TERM \"$OLD\" 2>/dev/null || true; pkill -TERM -P \"$OLD\" 2>/dev/null || true; sleep 1; kill -KILL \"$OLD\" 2>/dev/null || true; pkill -KILL -P \"$OLD\" 2>/dev/null || true; fi; cd /Users/blueemi/Developer/CodexMonitor || exit 1; nohup \"$BUN\" run tauri dev >\"$LOG\" 2>&1 & echo $! > \"$PID\"'"

@@ -226,18 +226,20 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition:
-    background-color 0.18s ease,
-    color 0.18s ease;
+  transition: background-color 0.18s ease;
 }
 
 .composer-toolbar-plan-toggle:hover:not(:disabled) {
   background-color: transparent;
-  color: var(--composer-flat-controls);
+  color: inherit;
 }
 
 .composer-toolbar-plan-toggle.is-active {
-  color: var(--composer-flat-controls);
+  color: var(--message-link-color);
+}
+
+.composer-toolbar-plan-toggle.is-active:hover:not(:disabled) {
+  color: var(--message-link-color);
 }
 
 .composer-toolbar-plan-toggle:disabled {
