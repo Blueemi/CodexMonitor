@@ -3,6 +3,12 @@
   grid-template-columns: var(--tablet-nav-width, 72px) var(--sidebar-width, 280px) minmax(0, 1fr);
   grid-template-rows: 1fr;
   --tablet-nav-width: 72px;
+  --tablet-glass-shell: color-mix(in srgb, var(--surface-topbar) 76%, transparent);
+  --tablet-glass-panel: color-mix(in srgb, var(--surface-messages) 82%, transparent);
+  --tablet-glass-border: color-mix(in srgb, var(--border-strong) 88%, transparent);
+  background:
+    radial-gradient(90% 70% at 50% -14%, rgba(66, 112, 226, 0.16), transparent 68%),
+    var(--surface-messages);
 }
 
 .tablet-nav {
@@ -11,10 +17,12 @@
   align-items: stretch;
   gap: 10px;
   padding: 36px 8px 16px;
-  background: var(--surface-topbar);
+  background: var(--tablet-glass-shell);
   border-right: 1px solid var(--border-subtle);
   min-height: 0;
   height: 100%;
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
 }
 
 .tablet-nav-group {
@@ -69,6 +77,9 @@
   min-height: 0;
   height: 100%;
   overflow: hidden;
+  background: color-mix(in srgb, var(--surface-sidebar) 78%, transparent);
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
 }
 
 .tablet-projects .sidebar {
@@ -85,10 +96,18 @@
   min-height: 0;
   min-width: 0;
   height: 100%;
+  background: transparent;
 }
 
 .tablet-topbar {
-  padding: 10px 20px 8px;
+  margin: 8px 12px 0;
+  padding: 8px 14px 8px;
+  border-radius: 16px;
+  border: 1px solid var(--tablet-glass-border);
+  background: var(--tablet-glass-shell);
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.26);
 }
 
 .tablet-content {
@@ -97,11 +116,32 @@
 }
 
 .app.layout-tablet .messages-full {
-  padding: 12px 20px 16px;
+  margin: 10px 12px 0;
+  border-radius: 18px;
+  border: 1px solid var(--tablet-glass-border);
+  background: var(--tablet-glass-panel);
+  padding: 14px 16px 14px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
 }
 
 .app.layout-tablet .composer {
-  padding: 12px 20px 18px;
+  padding: 10px 12px 14px;
+  background: linear-gradient(
+    180deg,
+    rgba(20, 20, 20, 0),
+    rgba(20, 20, 20, 0.45) 38%,
+    rgba(20, 20, 20, 0.62) 100%
+  );
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.app.layout-tablet .composer-input {
+  border-color: var(--tablet-glass-border);
+  background: color-mix(in srgb, var(--surface-composer) 82%, transparent);
+  box-shadow:
+    0 12px 24px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .tablet-git {
@@ -116,6 +156,11 @@
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  margin: 0 12px 12px;
+  border-radius: 18px;
+  border: 1px solid var(--tablet-glass-border);
+  background: var(--tablet-glass-panel);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
 }
 
 .tablet-git-viewer .diff-viewer {

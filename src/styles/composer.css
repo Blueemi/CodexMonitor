@@ -419,7 +419,7 @@
   font-size: 15px;
   line-height: 1.45;
   letter-spacing: 0.004em;
-  font-family: "SF Pro Rounded", "Avenir Next", var(--ui-font-family);
+  font-family: var(--ui-font-family);
   -webkit-app-region: no-drag;
   overflow-y: hidden;
 }
@@ -799,56 +799,28 @@
 }
 
 .composer-context-ring {
-  --context-free: 0;
-  width: 22px;
-  height: 22px;
+  --context-used: 0;
+  width: 20px;
+  height: 20px;
   border-radius: 999px;
   display: grid;
   place-items: center;
   position: relative;
-  border: 1px solid color-mix(in srgb, var(--border-subtle) 92%, transparent);
-  background:
-    radial-gradient(circle, var(--surface-context-core) 52%, transparent 54%),
-    conic-gradient(
-      from 180deg,
-      hsl(calc(120deg * var(--context-free) / 100), 80%, 55%)
-        calc(var(--context-free) * 1%),
-      var(--border-strong) 0
-    );
-  transition: background 0.2s ease, transform 0.18s ease;
-}
-
-.composer-context-ring::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  right: 0;
-  bottom: calc(100% + 6px);
-  transform: translateY(4px);
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: var(--surface-command);
-  color: var(--text-emphasis);
-  font-size: 10px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.15s ease, transform 0.15s ease;
   border: 1px solid var(--border-subtle);
+  background: conic-gradient(
+    from -90deg,
+    var(--text-muted) calc(var(--context-used) * 1%),
+    color-mix(in srgb, var(--text-muted) 22%, transparent) 0
+  );
 }
 
-.composer-context-ring:hover::after {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.composer-context-ring:hover {
-  transform: translateY(-1px);
-}
-
-.composer-context-value {
-  font-weight: 600;
-  font-size: 7px;
-  color: var(--text-quiet);
+.composer-context-ring::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 88%, transparent);
+  background: var(--surface-context-core);
 }
 
 

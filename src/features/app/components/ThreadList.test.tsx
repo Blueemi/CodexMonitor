@@ -79,12 +79,12 @@ describe("ThreadList", () => {
     render(
       <ThreadList
         {...baseProps}
-        totalThreadRoots={4}
+        totalThreadRoots={11}
         onToggleExpanded={onToggleExpanded}
       />,
     );
 
-    const moreButton = screen.getByRole("button", { name: "More..." });
+    const moreButton = screen.getByRole("button", { name: "Show more" });
     fireEvent.click(moreButton);
     expect(onToggleExpanded).toHaveBeenCalledWith("ws-1");
   });
@@ -132,5 +132,19 @@ describe("ThreadList", () => {
       "thread-2",
       false,
     );
+  });
+
+  it("shows a reply spinner while a thread is processing", () => {
+    render(
+      <ThreadList
+        {...baseProps}
+        threadStatusById={{
+          ...statusMap,
+          "thread-1": { isProcessing: true, hasUnread: false, isReviewing: false },
+        }}
+      />,
+    );
+
+    expect(screen.getByLabelText("Reply in progress")).toBeTruthy();
   });
 });

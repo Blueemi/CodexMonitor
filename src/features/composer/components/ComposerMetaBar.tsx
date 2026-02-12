@@ -127,14 +127,14 @@ export function ComposerMetaBar({
   const lastTokens = contextUsage?.last.totalTokens ?? 0;
   const totalTokens = contextUsage?.total.totalTokens ?? 0;
   const usedTokens = lastTokens > 0 ? lastTokens : totalTokens;
-  const contextFreePercent =
+  const contextUsedPercent =
     contextWindow && contextWindow > 0 && usedTokens > 0
-      ? Math.max(
-          0,
-          100 -
-            Math.min(Math.max((usedTokens / contextWindow) * 100, 0), 100),
-        )
+      ? Math.min(Math.max((usedTokens / contextWindow) * 100, 0), 100)
       : null;
+  const contextUsageLabel =
+    contextUsedPercent === null
+      ? "Context used --"
+      : `Context used ${Math.round(contextUsedPercent)}%`;
   const selectedCollaborationMode =
     collaborationModes.find((mode) => mode.id === selectedCollaborationModeId) ?? null;
   const selectedCollaborationLabel =
@@ -261,24 +261,14 @@ export function ComposerMetaBar({
       <div className="composer-context">
         <div
           className="composer-context-ring"
-          data-tooltip={
-            contextFreePercent === null
-              ? "Context free --"
-              : `Context free ${Math.round(contextFreePercent)}%`
-          }
-          aria-label={
-            contextFreePercent === null
-              ? "Context free --"
-              : `Context free ${Math.round(contextFreePercent)}%`
-          }
+          title={contextUsageLabel}
+          aria-label={contextUsageLabel}
           style={
             {
-              "--context-free": contextFreePercent ?? 0,
+              "--context-used": contextUsedPercent ?? 0,
             } as CSSProperties
           }
-        >
-          <span className="composer-context-value">●</span>
-        </div>
+        />
       </div>
     </div>
   );

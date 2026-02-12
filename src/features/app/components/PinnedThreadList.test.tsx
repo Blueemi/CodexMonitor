@@ -98,5 +98,7 @@ describe("PinnedThreadList", () => {
       "thread-2",
       true,
     );
+
+    expect(screen.getByLabelText("Reply in progress")).toBeTruthy();
   });
 });

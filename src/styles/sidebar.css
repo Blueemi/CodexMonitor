@@ -11,7 +11,12 @@
   min-height: 0;
   overflow: hidden;
   position: relative;
-  transition: opacity 200ms ease, transform 200ms ease;
+  transition:
+    opacity 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .sidebar,
@@ -891,6 +896,22 @@
   opacity: 0.7;
 }
 
+.thread-processing-spinner {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--text-stronger);
+  flex-shrink: 0;
+  animation: thread-processing-spin 1s linear infinite;
+}
+
+@keyframes thread-processing-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .thread-row:hover .thread-pin-icon {
   opacity: 1;
 }
@@ -1404,7 +1425,7 @@
 
 .app.sidebar-collapsed .sidebar {
   opacity: 0;
-  transform: translateX(-12px);
+  transform: translate3d(-16px, 0, 0);
   pointer-events: none;
 }
 

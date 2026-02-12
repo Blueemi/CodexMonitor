@@ -1,4 +1,3 @@
-import { isMobilePlatform } from "@utils/platformPaths";
 import { useDebugLog } from "@/features/debug/hooks/useDebugLog";
 import { useAppSettingsController } from "@app/hooks/useAppSettingsController";
 import { useCodeCssVars } from "@app/hooks/useCodeCssVars";
@@ -12,8 +11,7 @@ export function useAppBootstrap() {
   const dictationState = useDictationController(appSettingsState.appSettings);
   const debugState = useDebugLog();
 
-  const shouldReduceTransparency =
-    appSettingsState.reduceTransparency || isMobilePlatform();
+  const shouldReduceTransparency = appSettingsState.reduceTransparency;
 
   useLiquidGlassEffect({
     reduceTransparency: shouldReduceTransparency,

@@ -239,7 +239,7 @@ export function SettingsDisplaySection({
           </button>
         </div>
         <div className="settings-help">
-          Applies to all UI text. Leave empty to use the default system font stack.
+          Applies to all UI text. Leave empty to use the default Google Sans Flex family.
         </div>
       </div>
       <div className="settings-field">
@@ -277,7 +277,7 @@ export function SettingsDisplaySection({
             Reset
           </button>
         </div>
-        <div className="settings-help">Applies to git diffs and other mono-spaced readouts.</div>
+        <div className="settings-help">Applies to git diffs and other code-style readouts.</div>
       </div>
       <div className="settings-field">
         <label className="settings-field-label" htmlFor="code-font-size">

@@ -43,14 +43,16 @@ export function PhoneLayout({
   debugPanelNode,
 }: PhoneLayoutProps) {
   return (
-    <div className="compact-shell">
+    <div className="compact-shell" data-active-tab={activeTab}>
       {approvalToastsNode}
       {updateToastNode}
       {errorToastsNode}
-      {activeTab === "home" && <div className="compact-panel">{homeNode}</div>}
-      {activeTab === "projects" && <div className="compact-panel">{sidebarNode}</div>}
+      {activeTab === "home" && <div className="compact-panel compact-panel-home">{homeNode}</div>}
+      {activeTab === "projects" && (
+        <div className="compact-panel compact-panel-projects">{sidebarNode}</div>
+      )}
       {activeTab === "codex" && (
-        <div className="compact-panel">
+        <div className="compact-panel compact-panel-codex">
           {activeWorkspace ? (
             <>
               <MainTopbar leftNode={topbarLeftNode} className="compact-topbar" />
@@ -63,7 +65,7 @@ export function PhoneLayout({
         </div>
       )}
       {activeTab === "git" && (
-        <div className="compact-panel">
+        <div className="compact-panel compact-panel-git">
           {!activeWorkspace && compactEmptyGitNode}
           {activeWorkspace && showGitDetail && (
             <>
@@ -83,7 +85,7 @@ export function PhoneLayout({
         </div>
       )}
       {activeTab === "log" && (
-        <div className="compact-panel">{debugPanelNode}</div>
+        <div className="compact-panel compact-panel-log">{debugPanelNode}</div>
       )}
       {tabBarNode}
     </div>

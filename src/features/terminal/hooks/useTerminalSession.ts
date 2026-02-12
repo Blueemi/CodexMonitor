@@ -16,6 +16,7 @@ import {
   resizeTerminalSession,
   writeTerminalSession,
 } from "../../../services/tauri";
+import { DEFAULT_CODE_FONT_FAMILY } from "../../../utils/fonts";
 
 const MAX_BUFFER_CHARS = 200_000;
 
@@ -76,7 +77,7 @@ function getTerminalAppearance(container: HTMLElement | null): TerminalAppearanc
         foreground: "#d9dee7",
         cursor: "#d9dee7",
       },
-      fontFamily: "Menlo, Monaco, \"Courier New\", monospace",
+      fontFamily: DEFAULT_CODE_FONT_FAMILY,
     };
   }
 
@@ -97,7 +98,7 @@ function getTerminalAppearance(container: HTMLElement | null): TerminalAppearanc
   const fontFamily =
     styles.getPropertyValue("--terminal-font-family").trim() ||
     styles.getPropertyValue("--code-font-family").trim() ||
-    "Menlo, Monaco, \"Courier New\", monospace";
+    DEFAULT_CODE_FONT_FAMILY;
 
   return {
     theme: {

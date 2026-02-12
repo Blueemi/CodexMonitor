@@ -118,7 +118,6 @@ import {
   SettingsView,
   type SettingsViewProps,
 } from "./features/settings/components/SettingsView";
-import { isMobilePlatform } from "./utils/platformPaths";
 import type {
   AccessMode,
   AppSettings,
@@ -186,7 +185,7 @@ function MainApp() {
     handleCopyDebug,
     clearDebugEntries,
   } = useDebugLog();
-  const shouldReduceTransparency = reduceTransparency || isMobilePlatform();
+  const shouldReduceTransparency = reduceTransparency;
   useLiquidGlassEffect({ reduceTransparency: shouldReduceTransparency, onDebug: addDebugEntry });
   const [accessMode, setAccessMode] = useState<AccessMode>("current");
   const { threadListSortKey, setThreadListSortKey } = useThreadListSortKey();
@@ -1824,6 +1823,8 @@ function MainApp() {
   const appClassName = `app ${isCompact ? "layout-compact" : "layout-desktop"}${
     isPhone ? " layout-phone" : ""
   }${isTablet ? " layout-tablet" : ""}${
+    isMobileRuntime ? " runtime-mobile" : ""
+  }${
     shouldReduceTransparency ? " reduced-transparency" : ""
   }${!isCompact && sidebarCollapsed ? " sidebar-collapsed" : ""}${
     !isCompact && rightPanelCollapsed ? " right-panel-collapsed" : ""

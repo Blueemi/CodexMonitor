@@ -3,6 +3,10 @@
   flex-direction: column;
   grid-template-columns: none;
   grid-template-rows: none;
+  --phone-glass-shell: color-mix(in srgb, var(--surface-topbar) 74%, transparent);
+  --phone-glass-panel: color-mix(in srgb, var(--surface-messages) 78%, transparent);
+  --phone-glass-border: color-mix(in srgb, var(--border-strong) 88%, transparent);
+  --phone-glass-shadow: 0 16px 36px rgba(0, 0, 0, 0.36);
 }
 
 .app.layout-phone.reduced-transparency,
@@ -12,43 +16,121 @@
 }
 
 .app.layout-phone .drag-strip {
-  height: 22px;
+  height: 16px;
+}
+
+.app.layout-phone .compact-shell {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(110% 75% at 50% -8%, rgba(61, 106, 222, 0.24), transparent 62%),
+    radial-gradient(80% 66% at 8% 110%, rgba(35, 85, 180, 0.15), transparent 72%),
+    var(--surface-messages);
+}
+
+.app.layout-phone .compact-shell::before,
+.app.layout-phone .compact-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app.layout-phone .compact-shell::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 28%);
+}
+
+.app.layout-phone .compact-shell::after {
+  background:
+    radial-gradient(90% 58% at 50% 0%, rgba(255, 255, 255, 0.08), transparent 65%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 16%, rgba(0, 0, 0, 0.22) 100%);
+}
+
+.app.layout-phone.reduced-transparency .compact-shell::before,
+.app.layout-phone.reduced-transparency .compact-shell::after {
+  display: none;
+}
+
+.app.layout-phone .compact-panel {
+  position: relative;
+  z-index: 1;
+  background: transparent;
 }
 
 .app.layout-phone .sidebar {
   flex-direction: column;
   align-items: stretch;
   overflow-x: hidden;
-  padding-top: calc(32px + env(safe-area-inset-top));
-  padding-bottom: 16px;
+  padding-top: calc(18px + env(safe-area-inset-top));
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  background: transparent;
+  border-right: none;
 }
 
 .app.layout-phone .compact-topbar {
-  padding-top: calc(10px + env(safe-area-inset-top));
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  margin: 10px 12px 0;
+  padding: calc(8px + env(safe-area-inset-top)) 12px 8px;
+  border: 1px solid var(--phone-glass-border);
+  border-radius: 16px;
+  background: var(--phone-glass-shell);
+  box-shadow: var(--phone-glass-shadow);
+  backdrop-filter: blur(20px) saturate(145%);
+  -webkit-backdrop-filter: blur(20px) saturate(145%);
 }
 
 .app.layout-phone .home {
-  padding-top: calc(44px + env(safe-area-inset-top));
+  max-width: none;
+  padding: calc(14px + env(safe-area-inset-top)) 14px 16px;
 }
 
 .app.layout-phone .messages-full {
-  padding: 12px 16px 12px;
+  margin: 8px 12px 0;
+  border-radius: 18px;
+  border: 1px solid var(--phone-glass-border);
+  background: var(--phone-glass-panel);
+  padding: 14px 14px 12px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+}
+
+.app.layout-phone .content.compact-content {
+  min-height: 0;
 }
 
 .app.layout-phone .composer {
   position: sticky;
   bottom: 0;
-  z-index: 2;
-  padding: 10px 12px calc(10px + var(--phone-composer-safe-bottom, 0px));
+  z-index: 6;
+  padding: 10px 12px calc(8px + var(--phone-composer-safe-bottom, 0px));
   border-top: none;
-  backdrop-filter: none;
+  background: linear-gradient(
+    180deg,
+    rgba(20, 20, 20, 0),
+    rgba(20, 20, 20, 0.5) 35%,
+    rgba(20, 20, 20, 0.7) 100%
+  );
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.app.layout-phone .composer-input {
+  border-radius: 20px;
+  border-color: var(--phone-glass-border);
+  background: color-mix(in srgb, var(--surface-composer) 82%, transparent);
+  box-shadow:
+    0 12px 24px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 html[data-mobile-composer-focus="true"] .app.layout-phone {
   --phone-composer-safe-bottom: env(safe-area-inset-bottom);
 }
 
-.compact-empty {
+.app.layout-phone .compact-empty {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -60,18 +142,18 @@ html[data-mobile-composer-focus="true"] .app.layout-phone {
   padding: 0 24px;
 }
 
-.compact-empty h3 {
+.app.layout-phone .compact-empty h3 {
   margin: 0;
   font-size: 16px;
   color: var(--text-strong);
 }
 
-.compact-empty p {
+.app.layout-phone .compact-empty p {
   margin: 0;
   font-size: 13px;
 }
 
-.compact-git {
+.app.layout-phone .compact-git {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -79,45 +161,64 @@ html[data-mobile-composer-focus="true"] .app.layout-phone {
   min-height: 0;
 }
 
-.compact-git-list {
+.app.layout-phone .compact-git-list {
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
-.compact-git-list > .ds-panel {
+.app.layout-phone .compact-git-list > .ds-panel {
   flex: 1;
   min-height: 0;
+  margin: 0 12px;
+  border-radius: 18px;
+  border: 1px solid var(--phone-glass-border);
+  background: var(--phone-glass-panel);
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
 }
 
-.compact-git-viewer {
+.app.layout-phone .compact-git-viewer {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
+  margin: 8px 12px 0;
+  border-radius: 18px;
+  border: 1px solid var(--phone-glass-border);
+  background: var(--phone-glass-panel);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
 }
 
-.compact-git-viewer .diff-viewer {
+.app.layout-phone .compact-git-viewer .diff-viewer {
   height: 100%;
+  border-radius: inherit;
+  overflow: hidden;
 }
 
-.compact-git-back {
+.app.layout-phone .compact-git-back {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px 6px;
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface-topbar);
+  margin: 8px 12px 0;
+  padding: 8px 10px 7px;
+  border: 1px solid var(--phone-glass-border);
+  border-radius: 14px;
+  background: var(--phone-glass-shell);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
 }
 
 .app.layout-phone .compact-panel > .compact-git-back:first-child {
+  margin-top: 10px;
   padding-top: calc(8px + env(safe-area-inset-top));
 }
 
-.compact-git-switch-button {
+.app.layout-phone .compact-git-switch-button {
   border: 1px solid var(--border-subtle);
-  background: var(--surface-control);
+  background: color-mix(in srgb, var(--surface-control) 70%, transparent);
   color: var(--text-subtle);
   font-size: 12px;
   font-weight: 600;
@@ -127,13 +228,52 @@ html[data-mobile-composer-focus="true"] .app.layout-phone {
   transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 
-.compact-git-switch-button.active {
+.app.layout-phone .compact-git-switch-button.active {
   color: var(--text-strong);
   border-color: var(--border-accent-soft);
-  background: var(--surface-active);
+  background: color-mix(in srgb, var(--surface-active) 84%, rgba(255, 255, 255, 0.04));
 }
 
-.compact-git-switch-button:disabled {
+.app.layout-phone .compact-git-switch-button:disabled {
   opacity: 0.45;
   cursor: default;
+}
+
+.app.layout-phone .tabbar {
+  position: sticky;
+  bottom: 0;
+  z-index: 7;
+  margin: 0 12px calc(10px + env(safe-area-inset-bottom));
+  min-height: 58px;
+  padding: 6px 8px;
+  border: 1px solid var(--phone-glass-border);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface-topbar) 78%, transparent);
+  box-shadow: var(--phone-glass-shadow);
+  backdrop-filter: blur(24px) saturate(165%);
+  -webkit-backdrop-filter: blur(24px) saturate(165%);
+}
+
+.app.layout-phone .tabbar-item {
+  border-radius: 12px;
+  color: var(--text-subtle);
+  padding: 8px 6px 7px;
+}
+
+.app.layout-phone .tabbar-item:hover {
+  color: var(--text-stronger);
+  background: color-mix(in srgb, var(--surface-hover) 88%, transparent);
+}
+
+.app.layout-phone .tabbar-item.active {
+  color: var(--text-strong);
+  border-color: color-mix(in srgb, var(--border-accent-soft) 85%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-active) 78%, rgba(255, 255, 255, 0.06)),
+    color-mix(in srgb, var(--surface-active) 60%, transparent)
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 0 0 1px color-mix(in srgb, var(--border-accent-soft) 62%, transparent);
 }

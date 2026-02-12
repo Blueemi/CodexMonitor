@@ -60,7 +60,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-family: var(--code-font-family, Menlo, Monaco, "Courier New", monospace);
+  font-family: var(--code-font-family, "Google Sans Flex", sans-serif);
 }
 
 .branch-switcher-modal-item-meta {

@@ -775,11 +775,11 @@ fn default_show_message_file_path() -> bool {
 }
 
 fn default_ui_font_family() -> String {
-    "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif".to_string()
+    "\"Google Sans Flex\", sans-serif".to_string()
 }
 
 fn default_code_font_family() -> String {
-    "ui-monospace, \"Cascadia Mono\", \"Segoe UI Mono\", Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace".to_string()
+    "\"Google Sans Flex\", sans-serif".to_string()
 }
 
 fn default_code_font_size() -> u8 {
@@ -1376,8 +1376,8 @@ mod tests {
         assert!(!settings.usage_show_remaining);
         assert!(settings.show_message_file_path);
         assert!(!settings.thread_title_autogeneration_enabled);
-        assert!(settings.ui_font_family.contains("system-ui"));
-        assert!(settings.code_font_family.contains("ui-monospace"));
+        assert!(settings.ui_font_family.contains("Google Sans Flex"));
+        assert!(settings.code_font_family.contains("Google Sans Flex"));
         assert_eq!(settings.code_font_size, 11);
         assert!(settings.notification_sounds_enabled);
         assert!(settings.system_notifications_enabled);

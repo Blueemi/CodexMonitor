@@ -10,7 +10,7 @@
   min-width: 0;
   background: var(--surface-messages);
   --main-panel-padding: 24px;
-  transition: grid-template-columns 220ms ease;
+  transition: grid-template-columns 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .app.reduced-transparency .main {
@@ -479,6 +479,9 @@
   z-index: 3;
   backdrop-filter: none;
   min-height: var(--main-topbar-height);
+  transition:
+    padding-left 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    padding-right 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .app.sidebar-collapsed .main-topbar {
@@ -1021,7 +1024,12 @@
   grid-row: 1 / -1;
   min-height: 0;
   overflow: hidden;
-  transition: opacity 200ms ease, transform 200ms ease;
+  transition:
+    opacity 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .right-panel-top {
@@ -1089,7 +1097,9 @@
   width: 8px;
   cursor: col-resize;
   z-index: 2;
-  transition: opacity 160ms ease;
+  transition:
+    right 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 180ms ease;
 }
 
 .right-panel-resizer::after {
@@ -1110,7 +1120,7 @@
 
 .app.right-panel-collapsed .right-panel {
   opacity: 0;
-  transform: translateX(12px);
+  transform: translate3d(16px, 0, 0);
   pointer-events: none;
   border-left-color: transparent;
 }

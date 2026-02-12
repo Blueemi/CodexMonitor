@@ -75,6 +75,7 @@ export function ThreadList({
           : "ready";
     const canPin = depth === 0;
     const isPinned = canPin && isThreadPinned(workspaceId, thread.id);
+    const isProcessing = status?.isProcessing ?? false;
 
     return (
       <div
@@ -99,6 +100,12 @@ export function ThreadList({
           }
         }}
       >
+        {isProcessing && (
+          <span
+            className="thread-processing-spinner"
+            aria-label="Reply in progress"
+          />
+        )}
         {isPinned && <span className="thread-pin-icon" aria-label="Pinned">📌</span>}
         <span className="thread-name">{thread.name}</span>
         <div className="thread-meta">

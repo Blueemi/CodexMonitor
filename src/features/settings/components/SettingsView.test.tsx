@@ -61,10 +61,8 @@ const baseSettings: AppSettings = {
   usageShowRemaining: false,
   showMessageFilePath: true,
   threadTitleAutogenerationEnabled: false,
-  uiFontFamily:
-    'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-  codeFontFamily:
-    'ui-monospace, "Cascadia Mono", "Segoe UI Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+  uiFontFamily: '"Google Sans Flex", sans-serif',
+  codeFontFamily: '"Google Sans Flex", sans-serif',
   codeFontSize: 11,
   notificationSoundsEnabled: true,
   systemNotificationsEnabled: true,
@@ -468,12 +466,12 @@ describe("SettingsView Display", () => {
     await waitFor(() => {
       expect(onUpdateAppSettings).toHaveBeenCalledWith(
         expect.objectContaining({
-          uiFontFamily: expect.stringContaining("system-ui"),
+          uiFontFamily: expect.stringContaining("Google Sans Flex"),
         }),
       );
       expect(onUpdateAppSettings).toHaveBeenCalledWith(
         expect.objectContaining({
-          codeFontFamily: expect.stringContaining("ui-monospace"),
+          codeFontFamily: expect.stringContaining("Google Sans Flex"),
         }),
       );
     });

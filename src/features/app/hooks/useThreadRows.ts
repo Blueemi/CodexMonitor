@@ -14,6 +14,8 @@ type ThreadRowResult = {
   hasMoreRoots: boolean;
 };
 
+const COLLAPSED_THREAD_ROOT_LIMIT = 10;
+
 export function useThreadRows(threadParentById: Record<string, string>) {
   const getThreadRows = useCallback(
     (
@@ -67,7 +69,9 @@ export function useThreadRows(threadParentById: Record<string, string>) {
         return aTime - bTime;
       });
 
-      const visibleRootCount = isExpanded ? unpinnedRoots.length : 3;
+      const visibleRootCount = isExpanded
+        ? unpinnedRoots.length
+        : COLLAPSED_THREAD_ROOT_LIMIT;
       const visibleRoots = unpinnedRoots.slice(0, visibleRootCount);
 
       const appendThread = (
