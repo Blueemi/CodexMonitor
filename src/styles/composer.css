@@ -18,6 +18,9 @@
   background: transparent;
   grid-column: 1;
   grid-row: 3;
+  width: 75%;
+  max-width: 75%;
+  margin-inline: auto;
 }
 
 .composer-queue {
@@ -78,8 +81,8 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding: 14px 16px 10px;
-  border-radius: 20px;
+  padding: 10px 12px 7px;
+  border-radius: 18px;
   border: 1px solid var(--composer-flat-outline);
   background: var(--composer-flat-bg);
   box-shadow: none;
@@ -118,7 +121,8 @@
 .composer-input-toolbar-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
+  margin-right: 2px;
 }
 
 .composer-worktree-source-row {
@@ -467,9 +471,9 @@
 }
 
 .composer textarea {
-  min-height: 56px;
-  max-height: 170px;
-  height: 56px;
+  min-height: 46px;
+  max-height: 160px;
+  height: 46px;
   width: 100%;
   flex: 1;
   resize: none;
@@ -634,8 +638,8 @@
 }
 
 .composer-action.is-send {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border: 1px solid var(--composer-flat-send);
   background: var(--composer-flat-send);
   color: var(--composer-flat-send-icon);
@@ -859,7 +863,7 @@
   justify-content: flex-end;
   min-width: 16px;
   align-items: center;
-  padding-right: 1px;
+  padding-right: 4px;
   flex: 0 0 auto;
 }
 
@@ -1135,6 +1139,21 @@
   gap: 3px;
 }
 
+.composer-bar--agent-local .composer-select-wrap--agent {
+  gap: 3px;
+  margin-left: 2px;
+}
+
+.composer-bar--agent-local .composer-select--agent-mode {
+  width: 52px;
+  max-width: 52px;
+}
+
+.composer-bar--agent-worktree .composer-select-wrap--agent,
+.composer-bar--agent-worktree .composer-select-wrap--access {
+  margin-left: 5px;
+}
+
 .composer-select--effort {
   width: 86px;
   max-width: 86px;
@@ -1169,10 +1188,12 @@
   .app.layout-phone .composer {
     gap: 8px;
     padding: 10px calc(var(--main-panel-padding) - 2px) 14px;
+    width: 100%;
+    max-width: 100%;
   }
 
   .app.layout-phone .composer-input {
-    padding: 10px 10px 8px;
+    padding: 9px 9px 7px;
     border-radius: 18px;
   }
 
@@ -1206,16 +1227,16 @@
   }
 
   .app.layout-phone .composer textarea {
-    min-height: 44px;
-    max-height: 168px;
-    height: 44px;
+    min-height: 40px;
+    max-height: 160px;
+    height: 40px;
     font-size: 16px;
     padding: 6px 1px;
   }
 
   .app.layout-phone .composer-action.is-send {
-    width: 34px;
-    height: 34px;
+    width: 28px;
+    height: 28px;
   }
 
   .app.layout-phone .composer-input-toolbar {

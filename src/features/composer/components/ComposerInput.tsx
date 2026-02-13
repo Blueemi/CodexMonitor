@@ -306,8 +306,8 @@ export function ComposerInput({
     if (!textarea) {
       return;
     }
-    const minTextareaHeight = isExpanded ? (isPhoneLayout ? 152 : 210) : isPhoneLayout ? 44 : 56;
-    const maxTextareaHeight = isExpanded ? (isPhoneLayout ? 280 : 360) : isPhoneLayout ? 168 : 170;
+    const minTextareaHeight = isExpanded ? (isPhoneLayout ? 148 : 198) : isPhoneLayout ? 40 : 46;
+    const maxTextareaHeight = isExpanded ? (isPhoneLayout ? 272 : 344) : isPhoneLayout ? 160 : 160;
     textarea.style.height = "auto";
     textarea.style.minHeight = `${minTextareaHeight}px`;
     textarea.style.maxHeight = `${maxTextareaHeight}px`;

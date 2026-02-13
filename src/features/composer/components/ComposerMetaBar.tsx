@@ -228,7 +228,7 @@ export function ComposerMetaBar({
   const AgentModeIcon = agentMode === "local" ? Laptop : GitBranch;
 
   return (
-    <div className="composer-bar">
+    <div className={`composer-bar composer-bar--agent-${agentMode}`}>
       <div className="composer-meta">
         {showCollaborationSelector && collaborationModes.length > 0 && (
           <div className="composer-select-wrap composer-select-wrap--menu" ref={collaborationMenuRef}>
