@@ -1,18 +1,19 @@
 import type { GitLogEntry } from "../../../types";
 import type { MouseEvent as ReactMouseEvent } from "react";
-import Check from "lucide-react/dist/esm/icons/check";
-import Minus from "lucide-react/dist/esm/icons/minus";
-import Plus from "lucide-react/dist/esm/icons/plus";
-import RotateCcw from "lucide-react/dist/esm/icons/rotate-ccw";
-import Upload from "lucide-react/dist/esm/icons/upload";
-import X from "lucide-react/dist/esm/icons/x";
 import { formatRelativeTime } from "../../../utils/time";
 import {
-  getStatusClass,
-  getStatusSymbol,
   splitNameAndExtension,
   splitPath,
 } from "./GitDiffPanel.utils";
+import {
+  GitApplyIcon,
+  GitCommitIcon,
+  GitDiscardIcon,
+  GitDismissIcon,
+  GitStageIcon,
+  GitSuccessIcon,
+  GitUnstageIcon,
+} from "./GitPanelIcons";
 
 export type DiffFile = {
   path: string;
@@ -73,19 +74,7 @@ export function CommitButton({
         {commitLoading ? (
           <span className="commit-button-spinner" aria-hidden />
         ) : (
-          <svg
-            width={14}
-            height={14}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-          >
-            <path d="M20 6 9 17l-5-5" />
-          </svg>
+          <GitCommitIcon size={14} aria-hidden />
         )}
         <span>{commitLoading ? "Committing..." : "Commit"}</span>
       </button>
@@ -131,7 +120,7 @@ export function SidebarError({
         aria-label="Dismiss error"
         title="Dismiss error"
       >
-        <X size={12} aria-hidden />
+        <GitDismissIcon size={12} aria-hidden />
       </button>
     </div>
   );
@@ -164,8 +153,6 @@ function DiffFileRow({
 }: DiffFileRowProps) {
   const { name, dir } = splitPath(file.path);
   const { base, extension } = splitNameAndExtension(name);
-  const statusSymbol = getStatusSymbol(file.status);
-  const statusClass = getStatusClass(file.status);
   const showStage = section === "unstaged" && Boolean(onStageFile);
   const showUnstage = section === "staged" && Boolean(onUnstageFile);
   const showDiscard = section === "unstaged" && Boolean(onDiscardFile);
@@ -184,9 +171,6 @@ function DiffFileRow({
       }}
       onContextMenu={onContextMenu}
     >
-      <span className={`diff-icon ${statusClass}`} aria-hidden>
-        {statusSymbol}
-      </span>
       <div className="diff-file">
         <div className="diff-path">
           <span className="diff-name">
@@ -214,7 +198,7 @@ function DiffFileRow({
               data-tooltip="Stage Changes"
               aria-label="Stage file"
             >
-              <Plus size={12} aria-hidden />
+              <GitStageIcon size={12} aria-hidden />
             </button>
           )}
           {showUnstage && (
@@ -228,7 +212,7 @@ function DiffFileRow({
               data-tooltip="Unstage Changes"
               aria-label="Unstage file"
             >
-              <Minus size={12} aria-hidden />
+              <GitUnstageIcon size={12} aria-hidden />
             </button>
           )}
           {showDiscard && (
@@ -242,7 +226,7 @@ function DiffFileRow({
               data-tooltip="Discard Changes"
               aria-label="Discard changes"
             >
-              <RotateCcw size={12} aria-hidden />
+              <GitDiscardIcon size={12} aria-hidden />
             </button>
           )}
         </div>
@@ -325,7 +309,7 @@ export function DiffSection({
                 data-tooltip="Stage All Changes"
                 aria-label="Stage all changes"
               >
-                <Plus size={12} aria-hidden />
+                <GitStageIcon size={12} aria-hidden />
               </button>
             )}
             {canUnstageAll && (
@@ -342,7 +326,7 @@ export function DiffSection({
                 data-tooltip="Unstage All Changes"
                 aria-label="Unstage all changes"
               >
-                <Minus size={12} aria-hidden />
+                <GitUnstageIcon size={12} aria-hidden />
               </button>
             )}
             {canDiscardAll && (
@@ -355,7 +339,7 @@ export function DiffSection({
                 data-tooltip="Discard All Changes"
                 aria-label="Discard all changes"
               >
-                <RotateCcw size={12} aria-hidden />
+                <GitDiscardIcon size={12} aria-hidden />
               </button>
             )}
           </div>
@@ -429,7 +413,7 @@ export function GitLogEntryRow({
 
 export function WorktreeApplyIcon({ success }: { success: boolean }) {
   if (success) {
-    return <Check size={12} aria-hidden />;
+    return <GitSuccessIcon size={12} aria-hidden />;
   }
-  return <Upload size={12} aria-hidden />;
+  return <GitApplyIcon size={12} aria-hidden />;
 }

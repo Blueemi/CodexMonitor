@@ -1,12 +1,12 @@
 .plan-panel {
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  margin: 0 12px;
-  padding: 0;
+  background: var(--right-panel-flat-bg, #1c1c1c);
+  border: 1px solid var(--right-panel-flat-outline, #2a2a2a);
+  border-radius: 10px;
+  margin: 0;
+  padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   -webkit-app-region: no-drag;
   height: 100%;
   min-height: 0;
@@ -16,27 +16,39 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-subtle);
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  color: var(--right-panel-flat-text, #8e8e8e);
 }
 
 .plan-progress {
-  font-size: 11px;
+  font-size: 10px;
   letter-spacing: 0.02em;
-  color: var(--text-faint);
+  color: var(--right-panel-flat-text, #8e8e8e);
+  border: 1px solid var(--right-panel-flat-outline, #2a2a2a);
+  border-radius: 999px;
+  padding: 1px 7px;
+  background: var(--right-panel-flat-bg, #1c1c1c);
 }
 
 .plan-explanation {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--right-panel-flat-text, #8e8e8e);
   white-space: pre-wrap;
+  border: 1px solid var(--right-panel-flat-outline, #2a2a2a);
+  border-radius: 8px;
+  padding: 8px;
+  background: var(--right-panel-flat-bg, #1c1c1c);
 }
 
 .plan-empty {
   font-size: 12px;
-  color: var(--text-faint);
+  color: var(--right-panel-flat-text, #8e8e8e);
+  border: 1px solid var(--right-panel-flat-outline, #2a2a2a);
+  border-radius: 8px;
+  padding: 8px;
+  background: var(--right-panel-flat-bg, #1c1c1c);
 }
 
 .plan-list {
@@ -56,22 +68,26 @@
   gap: 8px;
   align-items: flex-start;
   font-size: 12px;
-  color: var(--text-emphasis);
+  color: var(--right-panel-flat-text, #8e8e8e);
+  border: 1px solid var(--right-panel-flat-outline, #2a2a2a);
+  border-radius: 8px;
+  padding: 7px 8px;
+  background: var(--right-panel-flat-bg, #1c1c1c);
 }
 
 .plan-step-status {
   font-family: var(--code-font-family);
   font-size: 11px;
-  color: var(--text-faint);
+  color: var(--right-panel-flat-text, #8e8e8e);
   flex: 0 0 auto;
 }
 
 .plan-step.inProgress .plan-step-status {
-  color: var(--text-accent);
+  color: var(--right-panel-flat-text, #8e8e8e);
 }
 
 .plan-step.completed .plan-step-status {
-  color: var(--status-success);
+  color: var(--right-panel-flat-text, #8e8e8e);
 }
 
 .plan-step-text {

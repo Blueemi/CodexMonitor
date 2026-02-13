@@ -57,7 +57,7 @@ body {
   position: relative;
   --main-topbar-height: 44px;
   font-family: var(--ui-font-family);
-  transition: grid-template-columns 300ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: none;
 }
 
 .drag-strip {
@@ -85,7 +85,7 @@ body {
   -webkit-app-region: no-drag;
   pointer-events: auto;
   transform: translateY(calc(-50% + var(--titlebar-toggle-offset, 0px)));
-  transition: opacity 160ms ease;
+  transition: none;
 }
 
 
@@ -105,9 +105,7 @@ body {
   width: 8px;
   cursor: col-resize;
   z-index: 3;
-  transition:
-    left 300ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 180ms ease;
+  transition: none;
 }
 
 .sidebar-resizer::after {
@@ -119,7 +117,7 @@ body {
   width: 1px;
   background: var(--border-muted);
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: none;
 }
 
 .sidebar-resizer:hover::after {

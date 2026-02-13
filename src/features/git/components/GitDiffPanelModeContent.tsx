@@ -1,11 +1,6 @@
 import type { GitHubIssue, GitHubPullRequest, GitLogEntry } from "../../../types";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import ArrowLeftRight from "lucide-react/dist/esm/icons/arrow-left-right";
-import Download from "lucide-react/dist/esm/icons/download";
-import RotateCcw from "lucide-react/dist/esm/icons/rotate-ccw";
-import RotateCw from "lucide-react/dist/esm/icons/rotate-cw";
-import Upload from "lucide-react/dist/esm/icons/upload";
 import { formatRelativeTime } from "../../../utils/time";
 import {
   CommitButton,
@@ -13,6 +8,15 @@ import {
   type DiffFile,
   GitLogEntryRow,
 } from "./GitDiffPanelShared";
+import {
+  GitChangeRootIcon,
+  GitGenerateIcon,
+  GitLoadingIcon,
+  GitPullIcon,
+  GitPushIcon,
+  GitRefreshIcon,
+  GitSyncIcon,
+} from "./GitPanelIcons";
 import { DEPTH_OPTIONS, normalizeRootPath } from "./GitDiffPanel.utils";
 
 type GitMode = "diff" | "log" | "issues" | "prs";
@@ -114,7 +118,7 @@ export function GitBranchRow({ mode, branchName, onFetch, fetchLoading }: GitBra
         {fetchLoading ? (
           <span className="git-panel-spinner" aria-hidden />
         ) : (
-          <RotateCw size={12} aria-hidden />
+          <GitRefreshIcon size={12} aria-hidden />
         )}
       </button>
     </div>
@@ -153,7 +157,7 @@ export function GitRootCurrentPath({
           onClick={onScanGitRoots}
           disabled={gitRootScanLoading}
         >
-          <ArrowLeftRight className="git-root-button-icon" aria-hidden />
+          <GitChangeRootIcon className="git-root-button-icon" aria-hidden />
           Change
         </button>
       )}
@@ -374,47 +378,9 @@ export function GitDiffModeContent({
               aria-label="Generate commit message"
             >
               {commitMessageLoading ? (
-                <svg
-                  className="commit-message-loader"
-                  width={14}
-                  height={14}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden
-                >
-                  <path d="M12 2v4" />
-                  <path d="m16.2 7.8 2.9-2.9" />
-                  <path d="M18 12h4" />
-                  <path d="m16.2 16.2 2.9 2.9" />
-                  <path d="M12 18v4" />
-                  <path d="m4.9 19.1 2.9-2.9" />
-                  <path d="M2 12h4" />
-                  <path d="m4.9 4.9 2.9 2.9" />
-                </svg>
+                <GitLoadingIcon className="commit-message-loader" size={14} aria-hidden />
               ) : (
-                <svg
-                  width={14}
-                  height={14}
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden
-                >
-                  <path
-                    d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"
-                    stroke="none"
-                  />
-                  <path d="M20 2v4" fill="none" />
-                  <path d="M22 4h-4" fill="none" />
-                  <circle cx="4" cy="20" r="2" fill="none" />
-                </svg>
+                <GitGenerateIcon size={14} aria-hidden />
               )}
             </button>
           </div>
@@ -441,7 +407,7 @@ export function GitDiffModeContent({
                 {pullLoading ? (
                   <span className="commit-button-spinner" aria-hidden />
                 ) : (
-                  <Download size={14} aria-hidden />
+                  <GitPullIcon size={14} aria-hidden />
                 )}
                 <span>{pullLoading ? "Pulling..." : "Pull"}</span>
                 <span className="push-count">{commitsBehind}</span>
@@ -462,7 +428,7 @@ export function GitDiffModeContent({
                 {pushLoading ? (
                   <span className="commit-button-spinner" aria-hidden />
                 ) : (
-                  <Upload size={14} aria-hidden />
+                  <GitPushIcon size={14} aria-hidden />
                 )}
                 <span>Push</span>
                 <span className="push-count">{commitsAhead}</span>
@@ -480,7 +446,7 @@ export function GitDiffModeContent({
               {syncLoading ? (
                 <span className="commit-button-spinner" aria-hidden />
               ) : (
-                <RotateCcw size={14} aria-hidden />
+                <GitSyncIcon size={14} aria-hidden />
               )}
               <span>{syncLoading ? "Syncing..." : "Sync (pull then push)"}</span>
             </button>
