@@ -225,6 +225,11 @@
   overflow: visible;
 }
 
+.home-usage-card-with-right-preview .home-usage-cost-preview {
+  left: auto;
+  right: -1px;
+}
+
 .home-usage-card-with-preview:focus-visible {
   outline: 1px solid var(--text-accent);
   outline-offset: 2px;
@@ -378,9 +383,21 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+.home-usage-chart-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.home-usage-chart-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 .home-usage-chart {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   align-items: end;
   gap: 8px;
   height: 120px;
@@ -406,9 +423,9 @@
 .home-usage-bar::after {
   content: attr(data-value);
   position: absolute;
-  bottom: 100%;
+  top: 0;
   left: 50%;
-  transform: translate(-50%, -8px);
+  transform: translate(-50%, 0);
   background: var(--surface-popover);
   color: var(--text-stronger);
   border: 1px solid var(--border-subtle);
@@ -780,10 +797,6 @@
 
   .home-usage-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .home-usage-chart {
-    grid-template-columns: repeat(7, minmax(0, 1fr));
   }
 }
 

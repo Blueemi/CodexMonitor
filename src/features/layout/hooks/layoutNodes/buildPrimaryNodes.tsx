@@ -64,8 +64,6 @@ export function buildPrimaryNodes(options: LayoutNodesOptions): PrimaryLayoutNod
       onSelectWorkspace={options.onSelectWorkspace}
       onConnectWorkspace={options.onConnectWorkspace}
       onAddAgent={options.onAddAgent}
-      onAddWorktreeAgent={options.onAddWorktreeAgent}
-      onAddCloneAgent={options.onAddCloneAgent}
       onToggleWorkspaceCollapse={options.onToggleWorkspaceCollapse}
       onSelectThread={options.onSelectThread}
       onDeleteThread={options.onDeleteThread}
@@ -155,6 +153,11 @@ export function buildPrimaryNodes(options: LayoutNodesOptions): PrimaryLayoutNod
       reasoningSupported={options.reasoningSupported}
       accessMode={options.accessMode}
       onSelectAccessMode={options.onSelectAccessMode}
+      agentMode={options.newAgentMode}
+      onSelectAgentMode={options.onSelectNewAgentMode}
+      worktreeFromBranch={options.worktreeFromBranch}
+      worktreeFromBranchOptions={options.worktreeFromBranchOptions}
+      onSelectWorktreeFromBranch={options.onSelectWorktreeFromBranch}
       skills={options.skills}
       appsEnabled={options.appsEnabled}
       apps={options.apps}

@@ -43,8 +43,6 @@ const baseProps = {
   onSelectWorkspace: vi.fn(),
   onConnectWorkspace: vi.fn(),
   onAddAgent: vi.fn(),
-  onAddWorktreeAgent: vi.fn(),
-  onAddCloneAgent: vi.fn(),
   onToggleWorkspaceCollapse: vi.fn(),
   onSelectThread: vi.fn(),
   onDeleteThread: vi.fn(),
@@ -240,5 +238,68 @@ describe("Sidebar", () => {
 
     fireEvent.click(draftRow);
     expect(onSelectWorkspace).toHaveBeenCalledWith("ws-1");
+  });
+
+  it("starts a new chat from the workspace + button", () => {
+    const onAddAgent = vi.fn();
+    render(
+      <Sidebar
+        {...baseProps}
+        onAddAgent={onAddAgent}
+        workspaces={[
+          {
+            id: "ws-1",
+            name: "Workspace",
+            path: "/tmp/workspace",
+            connected: true,
+            settings: { sidebarCollapsed: false },
+          },
+        ]}
+        groupedWorkspaces={[
+          {
+            id: null,
+            name: "Workspaces",
+            workspaces: [
+              {
+                id: "ws-1",
+                name: "Workspace",
+                path: "/tmp/workspace",
+                connected: true,
+                settings: { sidebarCollapsed: false },
+              },
+            ],
+          },
+        ]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "New chat" }));
+    expect(onAddAgent).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders session and weekly limits in the sidebar footer", () => {
+    render(
+      <Sidebar
+        {...baseProps}
+        accountRateLimits={{
+          primary: { usedPercent: 40, windowDurationMins: 300, resetsAt: null },
+          secondary: { usedPercent: 75, windowDurationMins: 10080, resetsAt: null },
+          credits: null,
+          planType: "pro",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Session")).toBeTruthy();
+    expect(screen.getByText("Weekly")).toBeTruthy();
+    expect(screen.getByText("40%")).toBeTruthy();
+    expect(screen.getByText("75%")).toBeTruthy();
+  });
+
+  it("renders weekly placeholder when rate limits are unavailable", () => {
+    render(<Sidebar {...baseProps} accountRateLimits={null} />);
+
+    expect(screen.getByText("Session")).toBeTruthy();
+    expect(screen.getByText("Weekly")).toBeTruthy();
   });
 });

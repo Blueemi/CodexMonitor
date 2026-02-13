@@ -25,13 +25,11 @@ describe("WorkspaceCard", () => {
         workspace={workspace}
         isActive={false}
         isCollapsed
-        addMenuOpen={false}
-        addMenuWidth={220}
         onSelectWorkspace={onSelectWorkspace}
         onShowWorkspaceMenu={vi.fn()}
         onToggleWorkspaceCollapse={onToggleWorkspaceCollapse}
         onConnectWorkspace={vi.fn()}
-        onToggleAddMenu={vi.fn()}
+        onAddAgent={vi.fn()}
       />,
     );
 
@@ -49,13 +47,11 @@ describe("WorkspaceCard", () => {
         workspace={{ ...workspace, settings: { sidebarCollapsed: false } }}
         isActive={false}
         isCollapsed={false}
-        addMenuOpen={false}
-        addMenuWidth={220}
         onSelectWorkspace={onSelectWorkspace}
         onShowWorkspaceMenu={vi.fn()}
         onToggleWorkspaceCollapse={onToggleWorkspaceCollapse}
         onConnectWorkspace={vi.fn()}
-        onToggleAddMenu={vi.fn()}
+        onAddAgent={vi.fn()}
       />,
     );
 

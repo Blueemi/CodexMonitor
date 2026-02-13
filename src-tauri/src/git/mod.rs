@@ -72,6 +72,7 @@ macro_rules! try_remote_unit {
 #[tauri::command]
 pub(crate) async fn get_git_status(
     workspace_id: String,
+    include_line_stats: Option<bool>,
     state: State<'_, AppState>,
     app: AppHandle,
 ) -> Result<Value, String> {
@@ -79,9 +80,17 @@ pub(crate) async fn get_git_status(
         state,
         app,
         "get_git_status",
-        json!({ "workspaceId": &workspace_id })
+        json!({
+            "workspaceId": &workspace_id,
+            "includeLineStats": include_line_stats
+        })
     );
-    git_ui_core::get_git_status_core(&state.workspaces, workspace_id).await
+    git_ui_core::get_git_status_core(
+        &state.workspaces,
+        workspace_id,
+        include_line_stats.unwrap_or(true),
+    )
+    .await
 }
 
 #[tauri::command]

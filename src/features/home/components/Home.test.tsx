@@ -212,4 +212,41 @@ describe("Home", () => {
     expect(screen.getAllByText("gpt-5.2-codex").length).toBeGreaterThan(0);
     expect(screen.getAllByText(/assumed as gpt-5.2-codex/).length).toBeGreaterThan(0);
   });
+
+  it("renders usage bars for all available days", () => {
+    const { container } = render(
+      <Home
+        {...baseProps}
+        localUsageSnapshot={{
+          updatedAt: Date.now(),
+          days: Array.from({ length: 10 }, (_, index) => ({
+            day: `2026-01-${String(index + 1).padStart(2, "0")}`,
+            inputTokens: 100 + index,
+            cachedInputTokens: 0,
+            outputTokens: 50 + index,
+            totalTokens: 150 + index,
+            agentTimeMs: 1000 * (index + 1),
+            agentRuns: index + 1,
+          })),
+          totals: {
+            last7DaysTokens: 0,
+            last30DaysTokens: 0,
+            allTimeTokens: 0,
+            averageDailyTokens: 0,
+            cacheHitRatePercent: 0,
+            peakDay: "2026-01-10",
+            peakDayTokens: 159,
+          },
+          modelUsage: {
+            last7Days: [],
+            last30Days: [],
+            allTime: [],
+          },
+          topModels: [],
+        }}
+      />,
+    );
+
+    expect(container.querySelectorAll(".home-usage-bar")).toHaveLength(10);
+  });
 });

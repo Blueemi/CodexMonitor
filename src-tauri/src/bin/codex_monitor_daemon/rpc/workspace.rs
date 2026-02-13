@@ -68,12 +68,14 @@ pub(super) async fn try_handle(
                 Ok(value) => value,
                 Err(err) => return Some(Err(err)),
             };
+            let from_branch = parse_optional_string(params, "fromBranch");
             let name = parse_optional_string(params, "name");
             let copy_agents_md = parse_optional_bool(params, "copyAgentsMd").unwrap_or(true);
             let workspace = match state
                 .add_worktree(
                     parent_id,
                     branch,
+                    from_branch,
                     name,
                     copy_agents_md,
                     client_version.to_string(),

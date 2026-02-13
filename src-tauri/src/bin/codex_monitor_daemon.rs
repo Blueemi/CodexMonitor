@@ -254,6 +254,7 @@ impl DaemonState {
         &self,
         parent_id: String,
         branch: String,
+        from_branch: Option<String>,
         name: Option<String>,
         copy_agents_md: bool,
         client_version: String,
@@ -262,6 +263,7 @@ impl DaemonState {
         workspaces_core::add_worktree_core(
             parent_id,
             branch,
+            from_branch,
             name,
             copy_agents_md,
             &self.data_dir,
@@ -343,6 +345,11 @@ impl DaemonState {
             &self.storage_path,
             |root, args| {
                 workspaces_core::run_git_command_unit(root, args, git_core::run_git_command_owned)
+            },
+            |root, branch| {
+                let root = root.clone();
+                let branch_name = branch.to_string();
+                async move { git_core::git_branch_exists(&root, &branch_name).await }
             },
             |error| git_core::is_missing_worktree_error(error),
             |path| {
@@ -886,8 +893,12 @@ impl DaemonState {
         }
     }
 
-    async fn get_git_status(&self, workspace_id: String) -> Result<Value, String> {
-        git_ui_core::get_git_status_core(&self.workspaces, workspace_id).await
+    async fn get_git_status(
+        &self,
+        workspace_id: String,
+        include_line_stats: bool,
+    ) -> Result<Value, String> {
+        git_ui_core::get_git_status_core(&self.workspaces, workspace_id, include_line_stats).await
     }
 
     async fn list_git_roots(

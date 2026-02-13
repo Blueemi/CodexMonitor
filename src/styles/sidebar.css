@@ -1028,6 +1028,28 @@
   gap: 6px;
 }
 
+.sidebar-worktree-context-anchor {
+  position: fixed;
+  z-index: 40;
+}
+
+.sidebar-worktree-context-menu {
+  min-width: 188px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-worktree-context-option--danger {
+  color: var(--status-error);
+}
+
+.sidebar-worktree-context-option--danger:hover,
+.sidebar-worktree-context-option--danger:focus-visible {
+  color: var(--status-error);
+}
+
 .worktree-header {
   text-transform: uppercase;
   font-size: 10px;

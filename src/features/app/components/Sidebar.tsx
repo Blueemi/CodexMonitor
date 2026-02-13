@@ -5,19 +5,14 @@ import type {
   ThreadSummary,
   WorkspaceInfo,
 } from "../../../types";
-import { createPortal } from "react-dom";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { RefObject } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
+import type { CSSProperties, MouseEvent as ReactMouseEvent, RefObject } from "react";
 import { FolderOpen } from "lucide-react";
-import Copy from "lucide-react/dist/esm/icons/copy";
-import GitBranch from "lucide-react/dist/esm/icons/git-branch";
-import Plus from "lucide-react/dist/esm/icons/plus";
+import RefreshCw from "lucide-react/dist/esm/icons/refresh-cw";
 import Settings from "lucide-react/dist/esm/icons/settings";
-import {
-  PopoverMenuItem,
-  PopoverSurface,
-} from "../../design-system/components/popover/PopoverPrimitives";
+import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import { SidebarHeader } from "./SidebarHeader";
+import { SidebarFooter } from "./SidebarFooter";
 import { ThreadList } from "./ThreadList";
 import { ThreadLoading } from "./ThreadLoading";
 import { WorktreeSection } from "./WorktreeSection";
@@ -26,20 +21,32 @@ import { WorkspaceCard } from "./WorkspaceCard";
 import { WorkspaceGroup } from "./WorkspaceGroup";
 import { useCollapsedGroups } from "../hooks/useCollapsedGroups";
 import { useSidebarMenus } from "../hooks/useSidebarMenus";
+import { useDismissibleMenu } from "../hooks/useDismissibleMenu";
 import { useSidebarScrollFade } from "../hooks/useSidebarScrollFade";
 import { useThreadRows } from "../hooks/useThreadRows";
-import { useDismissibleMenu } from "../hooks/useDismissibleMenu";
+import { getUsageLabels } from "../utils/usageLabels";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
+import { pushErrorToast } from "../../../services/toasts";
 import { formatRelativeTimeShort } from "../../../utils/time";
+import { fileManagerName } from "../../../utils/platformPaths";
+import {
+  PopoverMenuItem,
+  PopoverSurface,
+} from "../../design-system/components/popover/PopoverPrimitives";
 
 const COLLAPSED_GROUPS_STORAGE_KEY = "codexmonitor.collapsedGroups";
 const UNGROUPED_COLLAPSE_ID = "__ungrouped__";
-const ADD_MENU_WIDTH = 200;
 
 type WorkspaceGroupSection = {
   id: string | null;
   name: string;
   workspaces: WorkspaceInfo[];
+};
+
+type WorktreeContextMenuState = {
+  worktree: WorkspaceInfo;
+  x: number;
+  y: number;
 };
 
 type SidebarProps = {
@@ -77,8 +84,6 @@ type SidebarProps = {
   onSelectWorkspace: (id: string) => void;
   onConnectWorkspace: (workspace: WorkspaceInfo) => void;
   onAddAgent: (workspace: WorkspaceInfo) => void;
-  onAddWorktreeAgent: (workspace: WorkspaceInfo) => void;
-  onAddCloneAgent: (workspace: WorkspaceInfo) => void;
   onToggleWorkspaceCollapse: (workspaceId: string, collapsed: boolean) => void;
   onSelectThread: (workspaceId: string, threadId: string) => void;
   onDeleteThread: (workspaceId: string, threadId: string) => void;
@@ -119,8 +124,8 @@ export const Sidebar = memo(function Sidebar({
   onRefreshAllThreads: _onRefreshAllThreads,
   activeWorkspaceId,
   activeThreadId,
-  accountRateLimits: _accountRateLimits,
-  usageShowRemaining: _usageShowRemaining,
+  accountRateLimits,
+  usageShowRemaining,
   accountInfo: _accountInfo,
   onSwitchAccount: _onSwitchAccount,
   onCancelSwitchAccount: _onCancelSwitchAccount,
@@ -133,8 +138,6 @@ export const Sidebar = memo(function Sidebar({
   onSelectWorkspace,
   onConnectWorkspace,
   onAddAgent,
-  onAddWorktreeAgent,
-  onAddCloneAgent,
   onToggleWorkspaceCollapse,
   onSelectThread,
   onDeleteThread,
@@ -159,19 +162,15 @@ export const Sidebar = memo(function Sidebar({
   const [expandedWorkspaces, setExpandedWorkspaces] = useState(
     new Set<string>(),
   );
+  const [worktreeMenuState, setWorktreeMenuState] =
+    useState<WorktreeContextMenuState | null>(null);
   const [searchQuery] = useState("");
-  const [addMenuAnchor, setAddMenuAnchor] = useState<{
-    workspaceId: string;
-    top: number;
-    left: number;
-    width: number;
-  } | null>(null);
-  const addMenuRef = useRef<HTMLDivElement | null>(null);
+  const worktreeMenuRef = useRef<HTMLDivElement | null>(null);
   const { collapsedGroups, toggleGroupCollapse } = useCollapsedGroups(
     COLLAPSED_GROUPS_STORAGE_KEY,
   );
   const { getThreadRows } = useThreadRows(threadParentById);
-  const { showThreadMenu, showWorkspaceMenu, showWorktreeMenu } =
+  const { showThreadMenu, showWorkspaceMenu } =
     useSidebarMenus({
       onDeleteThread,
       onSyncThread,
@@ -181,8 +180,14 @@ export const Sidebar = memo(function Sidebar({
       onRenameThread,
       onReloadWorkspaceThreads,
       onDeleteWorkspace,
-      onDeleteWorktree,
     });
+  const fileManagerLabel = useMemo(() => fileManagerName(), []);
+
+  useDismissibleMenu({
+    isOpen: Boolean(worktreeMenuState),
+    containerRef: worktreeMenuRef,
+    onClose: () => setWorktreeMenuState(null),
+  });
   const debouncedQuery = useDebouncedValue(searchQuery, 150);
   const normalizedQuery = debouncedQuery.trim().toLowerCase();
 
@@ -317,6 +322,10 @@ export const Sidebar = memo(function Sidebar({
   );
 
   const isSearchActive = Boolean(normalizedQuery);
+  const usageLabels = useMemo(
+    () => getUsageLabels(accountRateLimits, usageShowRemaining),
+    [accountRateLimits, usageShowRemaining],
+  );
 
   const worktreesByParent = useMemo(() => {
     const worktrees = new Map<string, WorkspaceInfo[]>();
@@ -345,6 +354,77 @@ export const Sidebar = memo(function Sidebar({
       return next;
     });
   }, []);
+  const handleShowWorktreeMenu = useCallback(
+    (event: ReactMouseEvent, worktree: WorkspaceInfo) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setWorktreeMenuState({
+        worktree,
+        x: event.clientX,
+        y: event.clientY,
+      });
+    },
+    [],
+  );
+  const worktreeMenuStyle = useMemo<CSSProperties | undefined>(() => {
+    if (!worktreeMenuState) {
+      return undefined;
+    }
+    const viewportPadding = 8;
+    const menuWidth = 220;
+    const menuHeight = 124;
+    const left = Math.max(
+      viewportPadding,
+      Math.min(worktreeMenuState.x, window.innerWidth - menuWidth - viewportPadding),
+    );
+    const top = Math.max(
+      viewportPadding,
+      Math.min(worktreeMenuState.y, window.innerHeight - menuHeight - viewportPadding),
+    );
+    return {
+      left,
+      top,
+    };
+  }, [worktreeMenuState]);
+  const handleReloadWorktreeThreads = useCallback(() => {
+    if (!worktreeMenuState) {
+      return;
+    }
+    onReloadWorkspaceThreads(worktreeMenuState.worktree.id);
+    setWorktreeMenuState(null);
+  }, [onReloadWorkspaceThreads, worktreeMenuState]);
+  const handleRevealWorktree = useCallback(async () => {
+    if (!worktreeMenuState) {
+      return;
+    }
+    const worktree = worktreeMenuState.worktree;
+    setWorktreeMenuState(null);
+    if (!worktree.path) {
+      return;
+    }
+    try {
+      const { revealItemInDir } = await import("@tauri-apps/plugin-opener");
+      await revealItemInDir(worktree.path);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      pushErrorToast({
+        title: `Couldn't show worktree in ${fileManagerLabel}`,
+        message,
+      });
+      console.warn("Failed to reveal worktree", {
+        message,
+        workspaceId: worktree.id,
+        path: worktree.path,
+      });
+    }
+  }, [fileManagerLabel, worktreeMenuState]);
+  const handleDeleteWorktreeFromMenu = useCallback(() => {
+    if (!worktreeMenuState) {
+      return;
+    }
+    onDeleteWorktree(worktreeMenuState.worktree.id);
+    setWorktreeMenuState(null);
+  }, [onDeleteWorktree, worktreeMenuState]);
 
   const getThreadTime = useCallback(
     (thread: ThreadSummary) => {
@@ -353,26 +433,6 @@ export const Sidebar = memo(function Sidebar({
     },
     [],
   );
-
-  useDismissibleMenu({
-    isOpen: Boolean(addMenuAnchor),
-    containerRef: addMenuRef,
-    onClose: () => setAddMenuAnchor(null),
-  });
-
-  useEffect(() => {
-    if (!addMenuAnchor) {
-      return;
-    }
-    function handleScroll() {
-      setAddMenuAnchor(null);
-    }
-    window.addEventListener("scroll", handleScroll, true);
-    return () => {
-      window.removeEventListener("scroll", handleScroll, true);
-    };
-  }, [addMenuAnchor]);
-
   return (
     <aside
       className="sidebar"
@@ -469,7 +529,6 @@ export const Sidebar = memo(function Sidebar({
                     isLoadingThreads && threads.length === 0;
                   const isPaging = threadListPagingByWorkspace[entry.id] ?? false;
                   const worktrees = worktreesByParent.get(entry.id) ?? [];
-                  const addMenuOpen = addMenuAnchor?.workspaceId === entry.id;
                   const isDraftNewAgent = newAgentDraftWorkspaceId === entry.id;
                   const isDraftRowActive =
                     isDraftNewAgent &&
@@ -487,61 +546,12 @@ export const Sidebar = memo(function Sidebar({
                       workspaceName={renderHighlightedName(entry.name)}
                       isActive={entry.id === activeWorkspaceId}
                       isCollapsed={isCollapsed}
-                      addMenuOpen={addMenuOpen}
-                      addMenuWidth={ADD_MENU_WIDTH}
                       onSelectWorkspace={onSelectWorkspace}
                       onShowWorkspaceMenu={showWorkspaceMenu}
                       onToggleWorkspaceCollapse={onToggleWorkspaceCollapse}
                       onConnectWorkspace={onConnectWorkspace}
-                      onToggleAddMenu={setAddMenuAnchor}
+                      onAddAgent={onAddAgent}
                     >
-                      {addMenuOpen && addMenuAnchor &&
-                        createPortal(
-                          <PopoverSurface
-                            className="workspace-add-menu"
-                            ref={addMenuRef}
-                            style={{
-                              top: addMenuAnchor.top,
-                              left: addMenuAnchor.left,
-                              width: addMenuAnchor.width,
-                            }}
-                          >
-                            <PopoverMenuItem
-                              className="workspace-add-option"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                setAddMenuAnchor(null);
-                                onAddAgent(entry);
-                              }}
-                              icon={<Plus aria-hidden />}
-                            >
-                              New agent
-                            </PopoverMenuItem>
-                            <PopoverMenuItem
-                              className="workspace-add-option"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                setAddMenuAnchor(null);
-                                onAddWorktreeAgent(entry);
-                              }}
-                              icon={<GitBranch aria-hidden />}
-                            >
-                              New worktree agent
-                            </PopoverMenuItem>
-                            <PopoverMenuItem
-                              className="workspace-add-option"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                setAddMenuAnchor(null);
-                                onAddCloneAgent(entry);
-                              }}
-                              icon={<Copy aria-hidden />}
-                            >
-                              New clone agent
-                            </PopoverMenuItem>
-                          </PopoverSurface>,
-                          document.body,
-                        )}
                       {isDraftNewAgent && (
                         <div
                           className={`thread-row thread-row-draft${
@@ -582,7 +592,7 @@ export const Sidebar = memo(function Sidebar({
                           onToggleWorkspaceCollapse={onToggleWorkspaceCollapse}
                           onSelectThread={onSelectThread}
                           onShowThreadMenu={showThreadMenu}
-                          onShowWorktreeMenu={showWorktreeMenu}
+                          onShowWorktreeMenu={handleShowWorktreeMenu}
                           onToggleExpanded={handleToggleExpanded}
                           onLoadOlderThreads={onLoadOlderThreads}
                         />
@@ -623,6 +633,47 @@ export const Sidebar = memo(function Sidebar({
           )}
         </div>
       </div>
+      {worktreeMenuState && worktreeMenuStyle && (
+        <div
+          className="sidebar-worktree-context-anchor"
+          ref={worktreeMenuRef}
+          style={worktreeMenuStyle}
+        >
+          <PopoverSurface className="sidebar-worktree-context-menu" role="menu">
+            <PopoverMenuItem
+              className="sidebar-worktree-context-option"
+              onClick={handleReloadWorktreeThreads}
+              icon={<RefreshCw aria-hidden />}
+            >
+              Reload threads
+            </PopoverMenuItem>
+            <PopoverMenuItem
+              className="sidebar-worktree-context-option"
+              onClick={() => {
+                void handleRevealWorktree();
+              }}
+              icon={<FolderOpen aria-hidden />}
+            >
+              Show in {fileManagerLabel}
+            </PopoverMenuItem>
+            <PopoverMenuItem
+              className="sidebar-worktree-context-option sidebar-worktree-context-option--danger"
+              onClick={handleDeleteWorktreeFromMenu}
+              icon={<Trash2 aria-hidden />}
+            >
+              Delete branch
+            </PopoverMenuItem>
+          </PopoverSurface>
+        </div>
+      )}
+      <SidebarFooter
+        sessionPercent={usageLabels.sessionPercent}
+        weeklyPercent={usageLabels.weeklyPercent}
+        sessionResetLabel={usageLabels.sessionResetLabel}
+        weeklyResetLabel={usageLabels.weeklyResetLabel}
+        creditsLabel={usageLabels.creditsLabel}
+        showWeekly={usageLabels.showWeekly}
+      />
       <div
         className="sidebar-settings-row"
         role="button"

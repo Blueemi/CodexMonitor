@@ -88,6 +88,7 @@ pub(crate) async fn add_worktree_core<
 >(
     parent_id: String,
     branch: String,
+    from_branch: Option<String>,
     name: Option<String>,
     copy_agents_md: bool,
     data_dir: &PathBuf,
@@ -118,6 +119,9 @@ where
     if branch.is_empty() {
         return Err("Branch name is required.".to_string());
     }
+    let from_branch = from_branch
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty());
     let name = name
         .map(|value| value.trim().to_string())
         .filter(|value| !value.is_empty());
@@ -144,10 +148,25 @@ where
 
     let repo_path = PathBuf::from(&parent_entry.path);
     let branch_exists = git_branch_exists(&repo_path, &branch).await?;
+    let base_branch = if let Some(from_branch_value) = from_branch.as_ref() {
+        let exists = git_branch_exists(&repo_path, from_branch_value).await?;
+        if !exists {
+            return Err(format!("Base branch '{from_branch_value}' was not found."));
+        }
+        Some(from_branch_value.as_str())
+    } else {
+        None
+    };
     if branch_exists {
         run_git_command(
             &repo_path,
             &["worktree", "add", &worktree_path_string, &branch],
+        )
+        .await?;
+    } else if let Some(base) = base_branch {
+        run_git_command(
+            &repo_path,
+            &["worktree", "add", "-b", &branch, &worktree_path_string, base],
         )
         .await?;
     } else if let Some(find_remote_tracking) = git_find_remote_tracking_branch {
@@ -238,18 +257,28 @@ where
     })
 }
 
-pub(crate) async fn remove_worktree_core<FRunGit, FutRunGit, FIsMissing, FRemoveDirAll>(
+pub(crate) async fn remove_worktree_core<
+    FRunGit,
+    FutRunGit,
+    FBranchExists,
+    FutBranchExists,
+    FIsMissing,
+    FRemoveDirAll,
+>(
     id: String,
     workspaces: &Mutex<HashMap<String, WorkspaceEntry>>,
     sessions: &Mutex<HashMap<String, Arc<WorkspaceSession>>>,
     storage_path: &PathBuf,
     run_git_command: FRunGit,
+    git_branch_exists: FBranchExists,
     is_missing_worktree_error: FIsMissing,
     remove_dir_all: FRemoveDirAll,
 ) -> Result<(), String>
 where
     FRunGit: Fn(&PathBuf, &[&str]) -> FutRunGit,
     FutRunGit: Future<Output = Result<(), String>>,
+    FBranchExists: Fn(&PathBuf, &str) -> FutBranchExists,
+    FutBranchExists: Future<Output = Result<bool, String>>,
     FIsMissing: Fn(&str) -> bool,
     FRemoveDirAll: Fn(&PathBuf) -> Result<(), String>,
 {
@@ -275,6 +304,11 @@ where
 
     let parent_path = PathBuf::from(&parent.path);
     let entry_path = PathBuf::from(&entry.path);
+    let worktree_branch = entry
+        .worktree
+        .as_ref()
+        .map(|worktree| worktree.branch.trim().to_string())
+        .filter(|branch| !branch.is_empty());
     kill_session_by_id(sessions, &entry.id).await;
 
     if entry_path.exists() {
@@ -294,6 +328,11 @@ where
         }
     }
     let _ = run_git_command(&parent_path, &["worktree", "prune", "--expire", "now"]).await;
+    if let Some(branch) = worktree_branch.as_deref() {
+        if git_branch_exists(&parent_path, branch).await? {
+            run_git_command(&parent_path, &["branch", "-D", branch]).await?;
+        }
+    }
 
     {
         let mut workspaces = workspaces.lock().await;

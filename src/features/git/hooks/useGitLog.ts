@@ -26,15 +26,33 @@ const emptyState: GitLogState = {
   error: null,
 };
 
-const REFRESH_INTERVAL_MS = 10000;
+const DEFAULT_REFRESH_INTERVAL_MS = 30000;
+
+type UseGitLogOptions = {
+  pollingEnabled?: boolean;
+  refreshIntervalMs?: number;
+  pauseWhenInactive?: boolean;
+};
+
+function readWindowActiveState() {
+  if (typeof document === "undefined") {
+    return true;
+  }
+  return document.visibilityState !== "hidden";
+}
 
 export function useGitLog(
   activeWorkspace: WorkspaceInfo | null,
   enabled: boolean,
+  options: UseGitLogOptions = {},
 ) {
   const [state, setState] = useState<GitLogState>(emptyState);
+  const [isWindowActive, setIsWindowActive] = useState(readWindowActiveState);
   const requestIdRef = useRef(0);
   const workspaceIdRef = useRef<string | null>(activeWorkspace?.id ?? null);
+  const pollingEnabled = options.pollingEnabled ?? true;
+  const refreshIntervalMs = options.refreshIntervalMs ?? DEFAULT_REFRESH_INTERVAL_MS;
+  const pauseWhenInactive = options.pauseWhenInactive ?? true;
 
   const refresh = useCallback(async () => {
     if (!activeWorkspace) {
@@ -96,17 +114,45 @@ export function useGitLog(
   }, [activeWorkspace?.id]);
 
   useEffect(() => {
-    if (!enabled || !activeWorkspace) {
+    const handleFocus = () => setIsWindowActive(true);
+    const handleBlur = () => setIsWindowActive(false);
+    const handleVisibilityChange = () =>
+      setIsWindowActive(document.visibilityState !== "hidden");
+
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!enabled || !activeWorkspace || (pauseWhenInactive && !isWindowActive)) {
       return;
     }
     void refresh();
+    if (!pollingEnabled || refreshIntervalMs <= 0) {
+      return;
+    }
     const interval = window.setInterval(() => {
       refresh().catch(() => {});
-    }, REFRESH_INTERVAL_MS);
+    }, refreshIntervalMs);
     return () => {
       window.clearInterval(interval);
     };
-  }, [activeWorkspace, enabled, refresh]);
+  }, [
+    activeWorkspace,
+    enabled,
+    isWindowActive,
+    pauseWhenInactive,
+    pollingEnabled,
+    refresh,
+    refreshIntervalMs,
+  ]);
 
   return {
     entries: state.entries,

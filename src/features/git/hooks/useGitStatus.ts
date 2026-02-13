@@ -22,13 +22,37 @@ const emptyStatus: GitStatusState = {
   error: null,
 };
 
-const REFRESH_INTERVAL_MS = 3000;
-export function useGitStatus(activeWorkspace: WorkspaceInfo | null) {
+const DEFAULT_REFRESH_INTERVAL_MS = 8000;
+
+type UseGitStatusOptions = {
+  includeLineStats?: boolean;
+  refreshIntervalMs?: number;
+  pauseWhenInactive?: boolean;
+};
+
+function readWindowActiveState() {
+  if (typeof document === "undefined") {
+    return true;
+  }
+  return document.visibilityState !== "hidden";
+}
+
+export function useGitStatus(
+  activeWorkspace: WorkspaceInfo | null,
+  options: UseGitStatusOptions = {},
+) {
   const [status, setStatus] = useState<GitStatusState>(emptyStatus);
+  const [isWindowActive, setIsWindowActive] = useState(readWindowActiveState);
   const requestIdRef = useRef(0);
-  const workspaceIdRef = useRef<string | null>(activeWorkspace?.id ?? null);
+  const requestScopeRef = useRef<string | null>(null);
   const cachedStatusRef = useRef<Map<string, GitStatusState>>(new Map());
   const workspaceId = activeWorkspace?.id ?? null;
+  const includeLineStats = options.includeLineStats ?? true;
+  const refreshIntervalMs = options.refreshIntervalMs ?? DEFAULT_REFRESH_INTERVAL_MS;
+  const pauseWhenInactive = options.pauseWhenInactive ?? true;
+  const requestScope = workspaceId
+    ? `${workspaceId}|lineStats:${includeLineStats ? "1" : "0"}`
+    : null;
 
   const resolveBranchName = useCallback(
     (incoming: string | undefined, cached: GitStatusState | undefined) => {
@@ -45,21 +69,21 @@ export function useGitStatus(activeWorkspace: WorkspaceInfo | null) {
   );
 
   const refresh = useCallback(() => {
-    if (!workspaceId) {
+    if (!workspaceId || !requestScope) {
       setStatus(emptyStatus);
       return;
     }
     const requestId = requestIdRef.current + 1;
     requestIdRef.current = requestId;
-    return getGitStatus(workspaceId)
+    return getGitStatus(workspaceId, { includeLineStats })
       .then((data) => {
         if (
           requestIdRef.current !== requestId ||
-          workspaceIdRef.current !== workspaceId
+          requestScopeRef.current !== requestScope
         ) {
           return;
         }
-        const cached = cachedStatusRef.current.get(workspaceId);
+        const cached = cachedStatusRef.current.get(requestScope);
         const resolvedBranchName = resolveBranchName(data.branchName, cached);
         const nextStatus = {
           ...data,
@@ -67,41 +91,61 @@ export function useGitStatus(activeWorkspace: WorkspaceInfo | null) {
           error: null,
         };
         setStatus(nextStatus);
-        cachedStatusRef.current.set(workspaceId, nextStatus);
+        cachedStatusRef.current.set(requestScope, nextStatus);
       })
       .catch((err) => {
         console.error("Failed to load git status", err);
         if (
           requestIdRef.current !== requestId ||
-          workspaceIdRef.current !== workspaceId
+          requestScopeRef.current !== requestScope
         ) {
           return;
         }
         const message = err instanceof Error ? err.message : String(err);
-        const cached = cachedStatusRef.current.get(workspaceId);
+        const cached = cachedStatusRef.current.get(requestScope);
         const nextStatus = cached
           ? { ...cached, error: message }
           : { ...emptyStatus, branchName: "unknown", error: message };
         setStatus(nextStatus);
       });
-  }, [resolveBranchName, workspaceId]);
+  }, [includeLineStats, requestScope, resolveBranchName, workspaceId]);
 
   useEffect(() => {
-    if (workspaceIdRef.current !== workspaceId) {
-      workspaceIdRef.current = workspaceId;
+    if (requestScopeRef.current !== requestScope) {
+      requestScopeRef.current = requestScope;
       requestIdRef.current += 1;
-      if (!workspaceId) {
+      if (!requestScope) {
         setStatus(emptyStatus);
         return;
       }
-      const cached = cachedStatusRef.current.get(workspaceId);
+      const cached = cachedStatusRef.current.get(requestScope);
       setStatus(cached ?? emptyStatus);
     }
-  }, [workspaceId]);
+  }, [requestScope]);
+
+  useEffect(() => {
+    const handleFocus = () => setIsWindowActive(true);
+    const handleBlur = () => setIsWindowActive(false);
+    const handleVisibilityChange = () =>
+      setIsWindowActive(document.visibilityState !== "hidden");
+
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
 
   useEffect(() => {
     if (!workspaceId) {
       setStatus(emptyStatus);
+      return;
+    }
+    if (pauseWhenInactive && !isWindowActive) {
       return;
     }
 
@@ -110,12 +154,15 @@ export function useGitStatus(activeWorkspace: WorkspaceInfo | null) {
     };
 
     fetchStatus();
-    const interval = window.setInterval(fetchStatus, REFRESH_INTERVAL_MS);
+    if (refreshIntervalMs <= 0) {
+      return;
+    }
+    const interval = window.setInterval(fetchStatus, refreshIntervalMs);
 
     return () => {
       window.clearInterval(interval);
     };
-  }, [refresh, workspaceId]);
+  }, [isWindowActive, pauseWhenInactive, refresh, refreshIntervalMs, workspaceId]);
 
   return { status, refresh };
 }

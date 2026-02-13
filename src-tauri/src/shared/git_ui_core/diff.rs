@@ -334,6 +334,7 @@ pub(super) fn collect_workspace_diff(repo_root: &Path) -> Result<String, String>
 pub(super) async fn get_git_status_inner(
     workspaces: &Mutex<HashMap<String, WorkspaceEntry>>,
     workspace_id: String,
+    include_line_stats: bool,
 ) -> Result<Value, String> {
     let entry = workspace_entry_for_id(workspaces, &workspace_id).await?;
     let repo_root = resolve_git_root(&entry)?;
@@ -406,8 +407,11 @@ pub(super) async fn get_git_status_inner(
         let mut combined_deletions = 0i64;
 
         if include_index {
-            let (additions, deletions) =
-                diff_stats_for_path(&repo, head_tree.as_ref(), path, true, false).unwrap_or((0, 0));
+            let (additions, deletions) = if include_line_stats {
+                diff_stats_for_path(&repo, head_tree.as_ref(), path, true, false).unwrap_or((0, 0))
+            } else {
+                (0, 0)
+            };
             if let Some(status_str) = status_for_index(status) {
                 staged_files.push(GitFileStatus {
                     path: normalized_path.clone(),
@@ -423,8 +427,11 @@ pub(super) async fn get_git_status_inner(
         }
 
         if include_workdir {
-            let (additions, deletions) =
-                diff_stats_for_path(&repo, head_tree.as_ref(), path, false, true).unwrap_or((0, 0));
+            let (additions, deletions) = if include_line_stats {
+                diff_stats_for_path(&repo, head_tree.as_ref(), path, false, true).unwrap_or((0, 0))
+            } else {
+                (0, 0)
+            };
             if let Some(status_str) = status_for_workdir(status) {
                 unstaged_files.push(GitFileStatus {
                     path: normalized_path.clone(),

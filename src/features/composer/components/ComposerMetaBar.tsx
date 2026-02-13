@@ -8,6 +8,9 @@ import {
   type RefObject,
 } from "react";
 import type { AccessMode, ThreadTokenUsage } from "../../../types";
+import Laptop from "lucide-react/dist/esm/icons/laptop";
+import GitBranch from "lucide-react/dist/esm/icons/git-branch";
+import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import { useDismissibleMenu } from "../../app/hooks/useDismissibleMenu";
 import {
   PopoverMenuItem,
@@ -22,6 +25,12 @@ type ComposerMetaBarProps = {
   showCollaborationSelector?: boolean;
   accessMode: AccessMode;
   onSelectAccessMode: (mode: AccessMode) => void;
+  agentMode: "local" | "worktree";
+  onSelectAgentMode: (mode: "local" | "worktree") => void;
+  showWorktreeFromBranch?: boolean;
+  worktreeFromBranch?: string;
+  worktreeFromBranchOptions?: string[];
+  onSelectWorktreeFromBranch?: (branch: string) => void;
   contextUsage?: ThreadTokenUsage | null;
 };
 
@@ -33,16 +42,30 @@ export function ComposerMetaBar({
   showCollaborationSelector = true,
   accessMode,
   onSelectAccessMode,
+  agentMode,
+  onSelectAgentMode,
+  showWorktreeFromBranch = false,
+  worktreeFromBranch = "main",
+  worktreeFromBranchOptions = [],
+  onSelectWorktreeFromBranch,
   contextUsage = null,
 }: ComposerMetaBarProps) {
   const [collaborationMenuOpen, setCollaborationMenuOpen] = useState(false);
+  const [agentMenuOpen, setAgentMenuOpen] = useState(false);
   const [accessMenuOpen, setAccessMenuOpen] = useState(false);
+  const [worktreeFromBranchMenuOpen, setWorktreeFromBranchMenuOpen] = useState(false);
   const [collaborationMenuAbove, setCollaborationMenuAbove] = useState(false);
+  const [agentMenuAbove, setAgentMenuAbove] = useState(false);
   const [accessMenuAbove, setAccessMenuAbove] = useState(false);
+  const [worktreeFromBranchMenuAbove, setWorktreeFromBranchMenuAbove] = useState(false);
   const collaborationMenuRef = useRef<HTMLDivElement | null>(null);
+  const agentMenuRef = useRef<HTMLDivElement | null>(null);
   const accessMenuRef = useRef<HTMLDivElement | null>(null);
+  const worktreeFromBranchMenuRef = useRef<HTMLDivElement | null>(null);
   const collaborationDropdownRef = useRef<HTMLDivElement | null>(null);
+  const agentDropdownRef = useRef<HTMLDivElement | null>(null);
   const accessDropdownRef = useRef<HTMLDivElement | null>(null);
+  const worktreeFromBranchDropdownRef = useRef<HTMLDivElement | null>(null);
 
   useDismissibleMenu({
     isOpen: collaborationMenuOpen,
@@ -56,12 +79,26 @@ export function ComposerMetaBar({
     onClose: () => setAccessMenuOpen(false),
   });
 
+  useDismissibleMenu({
+    isOpen: agentMenuOpen,
+    containerRef: agentMenuRef,
+    onClose: () => setAgentMenuOpen(false),
+  });
+
+  useDismissibleMenu({
+    isOpen: worktreeFromBranchMenuOpen,
+    containerRef: worktreeFromBranchMenuRef,
+    onClose: () => setWorktreeFromBranchMenuOpen(false),
+  });
+
   useEffect(() => {
     if (!disabled) {
       return;
     }
     setCollaborationMenuOpen(false);
+    setAgentMenuOpen(false);
     setAccessMenuOpen(false);
+    setWorktreeFromBranchMenuOpen(false);
   }, [disabled]);
 
   const updateMenuPlacement = useCallback(
@@ -108,6 +145,22 @@ export function ComposerMetaBar({
   }, [collaborationMenuOpen, updateMenuPlacement]);
 
   useLayoutEffect(() => {
+    if (!agentMenuOpen) {
+      setAgentMenuAbove(false);
+      return;
+    }
+    const update = () =>
+      updateMenuPlacement(agentMenuRef, agentDropdownRef, setAgentMenuAbove);
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [agentMenuOpen, updateMenuPlacement]);
+
+  useLayoutEffect(() => {
     if (!accessMenuOpen) {
       setAccessMenuAbove(false);
       return;
@@ -122,6 +175,26 @@ export function ComposerMetaBar({
       window.removeEventListener("scroll", update, true);
     };
   }, [accessMenuOpen, updateMenuPlacement]);
+
+  useLayoutEffect(() => {
+    if (!worktreeFromBranchMenuOpen) {
+      setWorktreeFromBranchMenuAbove(false);
+      return;
+    }
+    const update = () =>
+      updateMenuPlacement(
+        worktreeFromBranchMenuRef,
+        worktreeFromBranchDropdownRef,
+        setWorktreeFromBranchMenuAbove,
+      );
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [worktreeFromBranchMenuOpen, updateMenuPlacement]);
 
   const contextWindow = contextUsage?.modelContextWindow ?? null;
   const lastTokens = contextUsage?.last.totalTokens ?? 0;
@@ -146,6 +219,13 @@ export function ComposerMetaBar({
   ];
   const selectedAccessLabel =
     accessOptions.find((option) => option.id === accessMode)?.label ?? "Agent access";
+  const agentOptions: Array<{ id: "local" | "worktree"; label: string }> = [
+    { id: "local", label: "Local" },
+    { id: "worktree", label: "Worktree" },
+  ];
+  const selectedAgentLabel =
+    agentOptions.find((option) => option.id === agentMode)?.label ?? "Local";
+  const AgentModeIcon = agentMode === "local" ? Laptop : GitBranch;
 
   return (
     <div className="composer-bar">
@@ -171,7 +251,9 @@ export function ComposerMetaBar({
               aria-expanded={collaborationMenuOpen}
               onClick={() => {
                 setCollaborationMenuOpen((prev) => !prev);
+                setAgentMenuOpen(false);
                 setAccessMenuOpen(false);
+                setWorktreeFromBranchMenuOpen(false);
               }}
               disabled={disabled}
             >
@@ -200,6 +282,51 @@ export function ComposerMetaBar({
             )}
           </div>
         )}
+        <div
+          className="composer-select-wrap composer-select-wrap--menu composer-select-wrap--agent"
+          ref={agentMenuRef}
+        >
+          <span className="composer-icon" aria-hidden>
+            <AgentModeIcon size={13} />
+          </span>
+          <button
+            type="button"
+            className="composer-select composer-select--agent-mode"
+            aria-label="New agent mode"
+            aria-haspopup="menu"
+            aria-expanded={agentMenuOpen}
+            onClick={() => {
+              setAgentMenuOpen((prev) => !prev);
+              setCollaborationMenuOpen(false);
+              setAccessMenuOpen(false);
+              setWorktreeFromBranchMenuOpen(false);
+            }}
+            disabled={disabled}
+          >
+            {selectedAgentLabel}
+          </button>
+          {agentMenuOpen && (
+            <PopoverSurface
+              ref={agentDropdownRef}
+              className={`composer-select-dropdown${agentMenuAbove ? " is-above" : ""}`}
+              role="menu"
+            >
+              {agentOptions.map((option) => (
+                <PopoverMenuItem
+                  key={option.id}
+                  className="composer-select-option"
+                  onClick={() => {
+                    onSelectAgentMode(option.id);
+                    setAgentMenuOpen(false);
+                  }}
+                  active={option.id === agentMode}
+                >
+                  {option.label}
+                </PopoverMenuItem>
+              ))}
+            </PopoverSurface>
+          )}
+        </div>
         <div
           className={`composer-select-wrap composer-select-wrap--menu composer-select-wrap--access composer-select-wrap--access-${accessMode}`}
           ref={accessMenuRef}
@@ -231,6 +358,8 @@ export function ComposerMetaBar({
             onClick={() => {
               setAccessMenuOpen((prev) => !prev);
               setCollaborationMenuOpen(false);
+              setAgentMenuOpen(false);
+              setWorktreeFromBranchMenuOpen(false);
             }}
           >
             {selectedAccessLabel}
@@ -259,6 +388,60 @@ export function ComposerMetaBar({
         </div>
       </div>
       <div className="composer-context">
+        {showWorktreeFromBranch && (
+          <div
+            className="composer-worktree-source-menu composer-worktree-source-menu--inline"
+            ref={worktreeFromBranchMenuRef}
+          >
+            <button
+              type="button"
+              className="composer-worktree-source-button composer-worktree-source-button--inline"
+              aria-label="Worktree base branch"
+              aria-haspopup="menu"
+              aria-expanded={worktreeFromBranchMenuOpen}
+              onClick={() => {
+                setWorktreeFromBranchMenuOpen((prev) => !prev);
+                setCollaborationMenuOpen(false);
+                setAgentMenuOpen(false);
+                setAccessMenuOpen(false);
+              }}
+              disabled={disabled || worktreeFromBranchOptions.length === 0}
+            >
+              <GitBranch size={13} aria-hidden />
+              <span className="composer-worktree-source-text">
+                From {worktreeFromBranch || "main"}
+              </span>
+              <ChevronDown size={13} aria-hidden />
+            </button>
+            {worktreeFromBranchMenuOpen && (
+              <PopoverSurface
+                ref={worktreeFromBranchDropdownRef}
+                className={`composer-worktree-source-dropdown${
+                  worktreeFromBranchMenuAbove ? " is-above" : ""
+                }`}
+                role="menu"
+              >
+                {worktreeFromBranchOptions.length === 0 ? (
+                  <div className="composer-toolbar-dropdown-empty">No branches</div>
+                ) : (
+                  worktreeFromBranchOptions.map((branch) => (
+                    <PopoverMenuItem
+                      key={branch}
+                      className="composer-toolbar-option"
+                      onClick={() => {
+                        onSelectWorktreeFromBranch?.(branch);
+                        setWorktreeFromBranchMenuOpen(false);
+                      }}
+                      active={branch === worktreeFromBranch}
+                    >
+                      {branch}
+                    </PopoverMenuItem>
+                  ))
+                )}
+              </PopoverSurface>
+            )}
+          </div>
+        )}
         <div
           className="composer-context-ring"
           title={contextUsageLabel}

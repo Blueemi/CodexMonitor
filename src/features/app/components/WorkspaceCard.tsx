@@ -8,18 +8,11 @@ type WorkspaceCardProps = {
   workspaceName?: React.ReactNode;
   isActive: boolean;
   isCollapsed: boolean;
-  addMenuOpen: boolean;
-  addMenuWidth: number;
   onSelectWorkspace: (id: string) => void;
   onShowWorkspaceMenu: (event: MouseEvent, workspaceId: string) => void;
   onToggleWorkspaceCollapse: (workspaceId: string, collapsed: boolean) => void;
   onConnectWorkspace: (workspace: WorkspaceInfo) => void;
-  onToggleAddMenu: (anchor: {
-    workspaceId: string;
-    top: number;
-    left: number;
-    width: number;
-  } | null) => void;
+  onAddAgent: (workspace: WorkspaceInfo) => void;
   children?: React.ReactNode;
 };
 
@@ -28,13 +21,11 @@ export function WorkspaceCard({
   workspaceName,
   isActive,
   isCollapsed,
-  addMenuOpen,
-  addMenuWidth,
   onSelectWorkspace,
   onShowWorkspaceMenu,
   onToggleWorkspaceCollapse,
   onConnectWorkspace,
-  onToggleAddMenu,
+  onAddAgent,
   children,
 }: WorkspaceCardProps) {
   const contentCollapsedClass = isCollapsed ? " collapsed" : "";
@@ -80,26 +71,11 @@ export function WorkspaceCard({
               className="ghost workspace-add"
               onClick={(event) => {
                 event.stopPropagation();
-                const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-                const left = Math.min(
-                  Math.max(rect.left, 12),
-                  window.innerWidth - addMenuWidth - 12,
-                );
-                const top = rect.bottom + 8;
-                onToggleAddMenu(
-                  addMenuOpen
-                    ? null
-                    : {
-                        workspaceId: workspace.id,
-                        top,
-                        left,
-                        width: addMenuWidth,
-                      },
-                );
+                onAddAgent(workspace);
               }}
               data-tauri-drag-region="false"
-              aria-label="Add agent options"
-              aria-expanded={addMenuOpen}
+              aria-label="New chat"
+              title="New chat"
             >
               +
             </button>

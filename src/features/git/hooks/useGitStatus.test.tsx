@@ -63,7 +63,7 @@ describe("useGitStatus", () => {
     expect(result.current.status.totalAdditions).toBe(2);
 
     await act(async () => {
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(8000);
     });
     await act(async () => {
       await Promise.resolve();
@@ -136,8 +136,12 @@ describe("useGitStatus", () => {
       await Promise.resolve();
     });
 
-    expect(getGitStatusMock).toHaveBeenCalledWith("workspace-1");
-    expect(getGitStatusMock).toHaveBeenCalledWith("workspace-2");
+    expect(getGitStatusMock).toHaveBeenCalledWith("workspace-1", {
+      includeLineStats: true,
+    });
+    expect(getGitStatusMock).toHaveBeenCalledWith("workspace-2", {
+      includeLineStats: true,
+    });
 
     await act(async () => {
       resolveSecond(makeStatus("secondary", 4, 0));
@@ -179,6 +183,27 @@ describe("useGitStatus", () => {
 
     expect(result.current.status.branchName).toBe("main");
     expect(result.current.status.error).toBe("boom");
+
+    unmount();
+  });
+
+  it("passes includeLineStats option through to getGitStatus", async () => {
+    const getGitStatusMock = vi.mocked(getGitStatus);
+    getGitStatusMock.mockResolvedValueOnce(makeStatus("main", 1, 0));
+
+    const { unmount } = renderHook(
+      ({ active }: { active: WorkspaceInfo | null }) =>
+        useGitStatus(active, { includeLineStats: false }),
+      { initialProps: { active: workspace } },
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(getGitStatusMock).toHaveBeenCalledWith("workspace-1", {
+      includeLineStats: false,
+    });
 
     unmount();
   });

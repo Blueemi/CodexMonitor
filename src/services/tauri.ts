@@ -176,8 +176,15 @@ export async function addWorktree(
   branch: string,
   name: string | null,
   copyAgentsMd = true,
+  fromBranch: string | null = null,
 ): Promise<WorkspaceInfo> {
-  return invoke<WorkspaceInfo>("add_worktree", { parentId, branch, name, copyAgentsMd });
+  return invoke<WorkspaceInfo>("add_worktree", {
+    parentId,
+    branch,
+    fromBranch,
+    name,
+    copyAgentsMd,
+  });
 }
 
 export type WorktreeSetupStatus = {
@@ -376,7 +383,10 @@ export async function rememberApprovalRule(
   return invoke("remember_approval_rule", { workspaceId, command });
 }
 
-export async function getGitStatus(workspace_id: string): Promise<{
+export async function getGitStatus(
+  workspace_id: string,
+  options?: { includeLineStats?: boolean },
+): Promise<{
   branchName: string;
   files: GitFileStatus[];
   stagedFiles: GitFileStatus[];
@@ -384,7 +394,10 @@ export async function getGitStatus(workspace_id: string): Promise<{
   totalAdditions: number;
   totalDeletions: number;
 }> {
-  return invoke("get_git_status", { workspaceId: workspace_id });
+  return invoke("get_git_status", {
+    workspaceId: workspace_id,
+    includeLineStats: options?.includeLineStats,
+  });
 }
 
 export async function listGitRoots(

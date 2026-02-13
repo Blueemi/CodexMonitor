@@ -11,7 +11,8 @@ pub(super) async fn try_handle(
                 Ok(value) => value,
                 Err(err) => return Some(Err(err)),
             };
-            Some(state.get_git_status(workspace_id).await)
+            let include_line_stats = parse_optional_bool(params, "includeLineStats").unwrap_or(true);
+            Some(state.get_git_status(workspace_id, include_line_stats).await)
         }
         "list_git_roots" => {
             let workspace_id = match parse_string(params, "workspaceId") {

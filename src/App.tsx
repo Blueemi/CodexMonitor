@@ -122,6 +122,7 @@ import type {
   AccessMode,
   AppSettings,
   ComposerEditorSettings,
+  NewAgentMode,
   WorkspaceSettings,
   WorkspaceInfo,
 } from "./types";
@@ -148,6 +149,26 @@ const GitHubPanelData = lazy(() =>
     default: module.GitHubPanelData,
   })),
 );
+
+function normalizeBranchToken(value: string): string {
+  const trimmed = value.trim().replace(/^refs\/heads\//, "");
+  const token = trimmed
+    .toLowerCase()
+    .replace(/[^a-z0-9/-]+/g, "-")
+    .replace(/-{2,}/g, "-")
+    .replace(/(^[-/]+|[-/]+$)/g, "");
+  return token || "main";
+}
+
+function buildAutoWorktreeBranch(sourceBranch: string): string {
+  const now = new Date();
+  const dateCode = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(
+    now.getDate(),
+  ).padStart(2, "0")}`;
+  const randomCode = Math.random().toString(36).slice(2, 6);
+  const sourceToken = normalizeBranchToken(sourceBranch).split("/").pop() || "main";
+  return `codex/${sourceToken}-${dateCode}-${randomCode}`;
+}
 
 function MainApp() {
   const {
@@ -188,6 +209,8 @@ function MainApp() {
   const shouldReduceTransparency = reduceTransparency;
   useLiquidGlassEffect({ reduceTransparency: shouldReduceTransparency, onDebug: addDebugEntry });
   const [accessMode, setAccessMode] = useState<AccessMode>("current");
+  const [newAgentMode, setNewAgentMode] = useState<NewAgentMode>("local");
+  const [worktreeFromBranch, setWorktreeFromBranch] = useState<string | null>(null);
   const { threadListSortKey, setThreadListSortKey } = useThreadListSortKey();
   const [activeTab, setActiveTab] = useState<
     "home" | "projects" | "codex" | "git" | "log"
@@ -415,6 +438,7 @@ function MainApp() {
     isTablet,
     activeTab,
     tabletTab,
+    rightPanelCollapsed,
     setActiveTab,
     prDiffs: gitPullRequestDiffs,
     prDiffsLoading: gitPullRequestDiffsLoading,
@@ -541,6 +565,43 @@ function MainApp() {
     refreshGitStatus();
   };
   const currentBranch = gitStatus.branchName ?? null;
+  const worktreeFromBranchOptions = useMemo(() => {
+    if (!activeWorkspace || (activeWorkspace.kind ?? "main") === "worktree") {
+      return [] as string[];
+    }
+    const unique = new Set<string>();
+    if (currentBranch?.trim()) {
+      unique.add(currentBranch.trim());
+    }
+    branches.forEach((entry) => {
+      const name = entry.name.trim();
+      if (name) {
+        unique.add(name);
+      }
+    });
+    unique.add("main");
+    return Array.from(unique);
+  }, [activeWorkspace, branches, currentBranch]);
+  const resolvedWorktreeFromBranch = useMemo(() => {
+    const selected = worktreeFromBranch?.trim();
+    if (selected) {
+      return selected;
+    }
+    const current = currentBranch?.trim();
+    if (current) {
+      return current;
+    }
+    return "main";
+  }, [currentBranch, worktreeFromBranch]);
+  useEffect(() => {
+    if (worktreeFromBranch && worktreeFromBranchOptions.includes(worktreeFromBranch)) {
+      return;
+    }
+    if (worktreeFromBranchOptions.length === 0) {
+      return;
+    }
+    setWorktreeFromBranch(worktreeFromBranchOptions[0]);
+  }, [worktreeFromBranch, worktreeFromBranchOptions]);
   const {
     branchSwitcher,
     openBranchSwitcher,
@@ -725,6 +786,32 @@ function MainApp() {
     onMessageActivity: queueGitStatusRefresh,
     threadSortKey: threadListSortKey,
   });
+  const prefetchedAccountSnapshotWorkspaceIdsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const connectedWorkspaceIds = workspaces
+      .filter((workspace) => workspace.connected)
+      .map((workspace) => workspace.id);
+    const candidateWorkspaceIds =
+      connectedWorkspaceIds.length > 0
+        ? connectedWorkspaceIds
+        : workspaces.map((workspace) => workspace.id);
+    const candidateWorkspaceIdSet = new Set(candidateWorkspaceIds);
+
+    prefetchedAccountSnapshotWorkspaceIdsRef.current.forEach((workspaceId) => {
+      if (!candidateWorkspaceIdSet.has(workspaceId)) {
+        prefetchedAccountSnapshotWorkspaceIdsRef.current.delete(workspaceId);
+      }
+    });
+
+    candidateWorkspaceIds.forEach((workspaceId) => {
+      if (prefetchedAccountSnapshotWorkspaceIdsRef.current.has(workspaceId)) {
+        return;
+      }
+      prefetchedAccountSnapshotWorkspaceIdsRef.current.add(workspaceId);
+      void refreshAccountInfo(workspaceId);
+      void refreshAccountRateLimits(workspaceId);
+    });
+  }, [workspaces, refreshAccountInfo, refreshAccountRateLimits]);
 
   const { handleSetThreadListSortKey, handleRefreshAllWorkspaceThreads } =
     useThreadListActions({
@@ -1100,9 +1187,57 @@ function MainApp() {
     [hasLoaded, threadListLoadingByWorkspace, workspaces]
   );
 
-  const activeRateLimits = activeWorkspaceId
-    ? rateLimitsByWorkspace[activeWorkspaceId] ?? null
+  const activeRateLimitsWorkspaceId = useMemo(() => {
+    if (activeWorkspaceId && rateLimitsByWorkspace[activeWorkspaceId]) {
+      return activeWorkspaceId;
+    }
+
+    const connectedWithSnapshot = workspaces.find(
+      (workspace) => workspace.connected && Boolean(rateLimitsByWorkspace[workspace.id]),
+    );
+    if (connectedWithSnapshot) {
+      return connectedWithSnapshot.id;
+    }
+
+    const anySnapshotId = Object.keys(rateLimitsByWorkspace).find((workspaceId) =>
+      Boolean(rateLimitsByWorkspace[workspaceId]),
+    );
+    if (anySnapshotId) {
+      return anySnapshotId;
+    }
+
+    return workspaces.find((workspace) => workspace.connected)?.id ?? workspaces[0]?.id ?? null;
+  }, [activeWorkspaceId, rateLimitsByWorkspace, workspaces]);
+  const activeRateLimits = activeRateLimitsWorkspaceId
+    ? rateLimitsByWorkspace[activeRateLimitsWorkspaceId] ?? null
     : null;
+  useEffect(() => {
+    if (workspaces.length === 0) {
+      return;
+    }
+    const connectedWorkspaceIds = workspaces
+      .filter((workspace) => workspace.connected)
+      .map((workspace) => workspace.id);
+    const candidateWorkspaceIds =
+      connectedWorkspaceIds.length > 0
+        ? connectedWorkspaceIds
+        : workspaces.map((workspace) => workspace.id);
+
+    const refresh = () => {
+      candidateWorkspaceIds.forEach((workspaceId) => {
+        void refreshAccountRateLimits(workspaceId);
+      });
+    };
+    refresh();
+
+    const intervalId = window.setInterval(refresh, 60_000);
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [
+    workspaces,
+    refreshAccountRateLimits,
+  ]);
   const resolvedAccountPlanType = useMemo(() => {
     const readPlan = (value: string | null | undefined) => {
       if (typeof value !== "string") {
@@ -1380,27 +1515,6 @@ function MainApp() {
     refreshGitLog,
   });
 
-  const handleSendPromptToNewAgent = useCallback(
-    async (text: string) => {
-      const trimmed = text.trim();
-      if (!activeWorkspace || !trimmed) {
-        return;
-      }
-      if (!activeWorkspace.connected) {
-        await connectWorkspace(activeWorkspace);
-      }
-      const threadId = await startThreadForWorkspace(activeWorkspace.id, {
-        activate: false,
-      });
-      if (!threadId) {
-        return;
-      }
-      await sendUserMessageToThread(activeWorkspace, threadId, trimmed, []);
-    },
-    [activeWorkspace, connectWorkspace, sendUserMessageToThread, startThreadForWorkspace],
-  );
-
-
   const handleCreatePrompt = useCallback(
     async (data: {
       scope: "workspace" | "global";
@@ -1570,7 +1684,81 @@ function MainApp() {
     composerInputRef,
     onDebug: addDebugEntry,
   });
-
+  const createAutomaticWorktree = useCallback(
+    async (parentWorkspace: WorkspaceInfo) => {
+      const fromBranch = resolvedWorktreeFromBranch;
+      const branch = buildAutoWorktreeBranch(fromBranch);
+      const worktreeWorkspace = await addWorktreeAgent(parentWorkspace, branch, {
+        displayName: null,
+        copyAgentsMd: true,
+        fromBranch,
+      });
+      if (!worktreeWorkspace) {
+        return null;
+      }
+      await worktreeSetupScriptState.maybeRunWorktreeSetupScript(worktreeWorkspace);
+      return worktreeWorkspace;
+    },
+    [addWorktreeAgent, resolvedWorktreeFromBranch, worktreeSetupScriptState],
+  );
+  const sendPromptViaAutomaticWorktree = useCallback(
+    async (parentWorkspace: WorkspaceInfo, text: string, images: string[]) => {
+      const worktreeWorkspace = await createAutomaticWorktree(parentWorkspace);
+      if (!worktreeWorkspace) {
+        return false;
+      }
+      const threadId = await startThreadForWorkspace(worktreeWorkspace.id, {
+        activate: false,
+      });
+      if (!threadId) {
+        return false;
+      }
+      await sendUserMessageToThread(worktreeWorkspace, threadId, text, images);
+      return true;
+    },
+    [createAutomaticWorktree, sendUserMessageToThread, startThreadForWorkspace],
+  );
+  const handleSendPromptToNewAgent = useCallback(
+    async (text: string) => {
+      const trimmed = text.trim();
+      if (!activeWorkspace || !trimmed) {
+        return;
+      }
+      if (
+        newAgentMode === "worktree" &&
+        (activeWorkspace.kind ?? "main") !== "worktree"
+      ) {
+        try {
+          await sendPromptViaAutomaticWorktree(activeWorkspace, trimmed, []);
+        } catch (error) {
+          alertError(error);
+        }
+        return;
+      }
+      if (!activeWorkspace.connected) {
+        await connectWorkspace(activeWorkspace);
+      }
+      const threadId = await startThreadForWorkspace(activeWorkspace.id, {
+        activate: false,
+      });
+      if (!threadId) {
+        return;
+      }
+      await sendUserMessageToThread(activeWorkspace, threadId, trimmed, []);
+    },
+    [
+      activeWorkspace,
+      alertError,
+      connectWorkspace,
+      newAgentMode,
+      sendPromptViaAutomaticWorktree,
+      sendUserMessageToThread,
+      startThreadForWorkspace,
+    ],
+  );
+  const handleSelectNewAgentMode = useCallback((mode: NewAgentMode) => {
+    setNewAgentMode(mode);
+  }, []);
   const handleDropWorkspacePaths = useCallback(
     async (paths: string[]) => {
       const uniquePaths = Array.from(
@@ -1649,19 +1837,63 @@ function MainApp() {
     queueMessage,
   });
   const handleComposerSendWithDraftStart = useCallback(
-    (text: string, images: string[]) =>
-      runWithDraftStart(() => handleComposerSend(text, images)),
-    [handleComposerSend, runWithDraftStart],
+    (text: string, images: string[]) => {
+      if (
+        !activeThreadId &&
+        activeWorkspace &&
+        newAgentMode === "worktree" &&
+        (activeWorkspace.kind ?? "main") !== "worktree"
+      ) {
+        clearActiveImages();
+        void sendPromptViaAutomaticWorktree(activeWorkspace, text, images).catch(
+          alertError,
+        );
+        return;
+      }
+      return runWithDraftStart(() => handleComposerSend(text, images));
+    },
+    [
+      activeThreadId,
+      activeWorkspace,
+      clearActiveImages,
+      handleComposerSend,
+      newAgentMode,
+      sendPromptViaAutomaticWorktree,
+      alertError,
+      runWithDraftStart,
+    ],
   );
   const handleComposerQueueWithDraftStart = useCallback(
     (text: string, images: string[]) => {
+      if (
+        !activeThreadId &&
+        activeWorkspace &&
+        newAgentMode === "worktree" &&
+        (activeWorkspace.kind ?? "main") !== "worktree"
+      ) {
+        clearActiveImages();
+        void sendPromptViaAutomaticWorktree(activeWorkspace, text, images).catch(
+          alertError,
+        );
+        return;
+      }
       // Queueing without an active thread would no-op; bootstrap through send so user input is not lost.
       const runner = activeThreadId
         ? () => handleComposerQueue(text, images)
         : () => handleComposerSend(text, images);
       return runWithDraftStart(runner);
     },
-    [activeThreadId, handleComposerQueue, handleComposerSend, runWithDraftStart],
+    [
+      activeThreadId,
+      activeWorkspace,
+      clearActiveImages,
+      handleComposerQueue,
+      handleComposerSend,
+      newAgentMode,
+      sendPromptViaAutomaticWorktree,
+      alertError,
+      runWithDraftStart,
+    ],
   );
 
   const handleSelectWorkspaceInstance = useCallback(
@@ -1915,8 +2147,6 @@ function MainApp() {
       }
     },
     onAddAgent: handleAddAgent,
-    onAddWorktreeAgent: handleAddWorktreeAgent,
-    onAddCloneAgent: handleAddCloneAgent,
     onToggleWorkspaceCollapse: (workspaceId, collapsed) => {
       const target = workspacesById.get(workspaceId);
       if (!target) {
@@ -2219,6 +2449,11 @@ function MainApp() {
     reasoningSupported,
     accessMode,
     onSelectAccessMode: setAccessMode,
+    newAgentMode,
+    onSelectNewAgentMode: handleSelectNewAgentMode,
+    worktreeFromBranch: resolvedWorktreeFromBranch,
+    worktreeFromBranchOptions,
+    onSelectWorktreeFromBranch: setWorktreeFromBranch,
     skills,
     appsEnabled: appSettings.experimentalAppsEnabled,
     apps,

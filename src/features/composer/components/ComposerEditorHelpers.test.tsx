@@ -43,6 +43,8 @@ function ComposerHarness({ initialText = "", editorSettings }: HarnessProps) {
       reasoningSupported={false}
       accessMode="current"
       onSelectAccessMode={() => {}}
+      agentMode="local"
+      onSelectAgentMode={() => {}}
       skills={[]}
       apps={[]}
       prompts={[]}

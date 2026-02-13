@@ -388,4 +388,33 @@ describe("useAppServerEvents", () => {
       root.unmount();
     });
   });
+
+  it("routes account rate limits updates with direct payload shape", async () => {
+    const handlers: Handlers = {
+      onAccountRateLimitsUpdated: vi.fn(),
+    };
+    const { root } = await mount(handlers);
+
+    act(() => {
+      listener?.({
+        workspace_id: "ws-1",
+        message: {
+          method: "account/rateLimits/updated",
+          params: {
+            primary: { used_percent: 20, resets_at: 123 },
+            secondary: { used_percent: 50, resets_at: 456 },
+          },
+        },
+      });
+    });
+
+    expect(handlers.onAccountRateLimitsUpdated).toHaveBeenCalledWith("ws-1", {
+      primary: { used_percent: 20, resets_at: 123 },
+      secondary: { used_percent: 50, resets_at: 456 },
+    });
+
+    await act(async () => {
+      root.unmount();
+    });
+  });
 });

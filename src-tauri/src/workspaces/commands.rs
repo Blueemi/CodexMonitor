@@ -156,6 +156,7 @@ pub(crate) async fn add_clone(
 pub(crate) async fn add_worktree(
     parent_id: String,
     branch: String,
+    from_branch: Option<String>,
     name: Option<String>,
     copy_agents_md: Option<bool>,
     state: State<'_, AppState>,
@@ -170,6 +171,7 @@ pub(crate) async fn add_worktree(
             json!({
                 "parentId": parent_id,
                 "branch": branch,
+                "fromBranch": from_branch,
                 "name": name,
                 "copyAgentsMd": copy_agents_md
             }),
@@ -186,6 +188,7 @@ pub(crate) async fn add_worktree(
     workspaces_core::add_worktree_core(
         parent_id,
         branch,
+        from_branch,
         name,
         copy_agents_md,
         &data_dir,
@@ -313,6 +316,11 @@ pub(crate) async fn remove_worktree(
             workspaces_core::run_git_command_unit(root, args, |repo, args_owned| {
                 run_git_command_owned(repo, args_owned)
             })
+        },
+        |root, branch| {
+            let root = root.clone();
+            let branch = branch.to_string();
+            async move { git_branch_exists(&root, &branch).await }
         },
         |error| is_missing_worktree_error(error),
         |path| {

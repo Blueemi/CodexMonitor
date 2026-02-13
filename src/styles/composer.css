@@ -121,6 +121,68 @@
   gap: 8px;
 }
 
+.composer-worktree-source-row {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 2px;
+}
+
+.composer-worktree-source-menu {
+  position: relative;
+}
+
+.composer-worktree-source-menu--inline {
+  display: inline-flex;
+  align-items: center;
+}
+
+.composer-worktree-source-button {
+  border: none;
+  background: transparent;
+  color: var(--composer-flat-controls);
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 500;
+  padding: 4px 2px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.composer-worktree-source-button--inline {
+  font-size: 12px;
+  padding: 2px 2px;
+  gap: 5px;
+}
+
+.composer-worktree-source-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.composer-worktree-source-text {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.composer-worktree-source-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 180px;
+  padding: 6px;
+  z-index: 40;
+}
+
+.composer-worktree-source-dropdown.is-above {
+  top: auto;
+  bottom: calc(100% + 8px);
+}
+
 .composer-toolbar-attach {
   width: 28px;
   height: 28px;
@@ -793,34 +855,36 @@
 .composer-context {
   margin-left: auto;
   display: flex;
+  gap: 6px;
   justify-content: flex-end;
-  min-width: 24px;
+  min-width: 16px;
   align-items: center;
+  padding-right: 1px;
+  flex: 0 0 auto;
 }
 
 .composer-context-ring {
   --context-used: 0;
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   border-radius: 999px;
-  display: grid;
-  place-items: center;
   position: relative;
-  border: 1px solid var(--border-subtle);
-  background: conic-gradient(
-    from -90deg,
-    var(--text-muted) calc(var(--context-used) * 1%),
-    color-mix(in srgb, var(--text-muted) 22%, transparent) 0
-  );
+  border: 1px solid color-mix(in srgb, var(--text-muted) 54%, transparent);
+  background: transparent;
 }
 
-.composer-context-ring::before {
+.composer-context-ring::after {
   content: "";
-  width: 12px;
-  height: 12px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 3px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--border-subtle) 88%, transparent);
-  background: var(--surface-context-core);
+  background: #fff;
+  transform: translate(-50%, -50%)
+    rotate(calc(var(--context-used) * 3.6deg - 90deg))
+    translateY(-7px);
 }
 
 
@@ -1060,6 +1124,15 @@
 .composer-select--collab {
   width: 90px;
   max-width: 90px;
+}
+
+.composer-select--agent-mode {
+  width: 70px;
+  max-width: 70px;
+}
+
+.composer-select-wrap--agent {
+  gap: 3px;
 }
 
 .composer-select--effort {

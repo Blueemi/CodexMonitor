@@ -5,6 +5,10 @@ import { useGitDiffs } from "../../git/hooks/useGitDiffs";
 import { useGitLog } from "../../git/hooks/useGitLog";
 import { useGitCommitDiffs } from "../../git/hooks/useGitCommitDiffs";
 
+const GIT_STATUS_FOREGROUND_REFRESH_INTERVAL_MS = 8000;
+const GIT_STATUS_BACKGROUND_REFRESH_INTERVAL_MS = 30000;
+const GIT_LOG_REFRESH_INTERVAL_MS = 30000;
+
 export function useGitPanelController({
   activeWorkspace,
   gitDiffPreloadEnabled,
@@ -14,6 +18,7 @@ export function useGitPanelController({
   isTablet,
   activeTab,
   tabletTab,
+  rightPanelCollapsed,
   setActiveTab,
   prDiffs,
   prDiffsLoading,
@@ -27,6 +32,7 @@ export function useGitPanelController({
   isTablet: boolean;
   activeTab: "home" | "projects" | "codex" | "git" | "log";
   tabletTab: "codex" | "git" | "log";
+  rightPanelCollapsed: boolean;
   setActiveTab: (tab: "home" | "projects" | "codex" | "git" | "log") => void;
   prDiffs: GitHubPullRequestDiff[];
   prDiffsLoading: boolean;
@@ -53,10 +59,6 @@ export function useGitPanelController({
   const [diffSource, setDiffSource] = useState<"local" | "pr" | "commit">(
     "local",
   );
-
-  const { status: gitStatus, refresh: refreshGitStatus } = useGitStatus(
-    activeWorkspace,
-  );
   const gitStatusRefreshTimeoutRef = useRef<number | null>(null);
   const activeWorkspaceIdRef = useRef<string | null>(activeWorkspace?.id ?? null);
   const activeWorkspaceRef = useRef(activeWorkspace);
@@ -77,6 +79,27 @@ export function useGitPanelController({
     };
   }, []);
 
+  const preloadedWorkspaceIdsRef = useRef<Set<string>>(new Set());
+  const compactTab = isTablet ? tabletTab : activeTab;
+  const gitPanelVisible = isCompact ? compactTab === "git" : !rightPanelCollapsed;
+  const diffUiVisible =
+    centerMode === "diff" ||
+    (gitPanelVisible && gitPanelMode === "diff");
+  const logUiVisible =
+    centerMode === "diff" ||
+    (gitPanelVisible && gitPanelMode === "log");
+  const gitStatusRefreshIntervalMs = diffUiVisible
+    ? GIT_STATUS_FOREGROUND_REFRESH_INTERVAL_MS
+    : GIT_STATUS_BACKGROUND_REFRESH_INTERVAL_MS;
+  const includeGitLineStats = diffUiVisible;
+  const { status: gitStatus, refresh: refreshGitStatus } = useGitStatus(
+    activeWorkspace,
+    {
+      includeLineStats: includeGitLineStats,
+      refreshIntervalMs: gitStatusRefreshIntervalMs,
+      pauseWhenInactive: true,
+    },
+  );
   const queueGitStatusRefresh = useCallback(() => {
     const workspaceId = activeWorkspaceIdRef.current;
     if (!workspaceId) {
@@ -93,12 +116,6 @@ export function useGitPanelController({
       refreshGitStatus();
     }, 500);
   }, [refreshGitStatus]);
-
-  const preloadedWorkspaceIdsRef = useRef<Set<string>>(new Set());
-  const compactTab = isTablet ? tabletTab : activeTab;
-  const diffUiVisible =
-    centerMode === "diff" ||
-    (isCompact ? compactTab === "git" : gitPanelMode === "diff");
   const shouldPreloadDiffs = Boolean(
     gitDiffPreloadEnabled &&
       activeWorkspace &&
@@ -116,8 +133,7 @@ export function useGitPanelController({
   const shouldLoadDiffs =
     Boolean(activeWorkspace) &&
     (diffSource === "local" ? shouldLoadLocalDiffs : diffUiVisible);
-  const shouldLoadGitLog =
-    Boolean(activeWorkspace) && (gitPanelMode === "log" || diffUiVisible);
+  const shouldLoadGitLog = Boolean(activeWorkspace) && logUiVisible;
 
   const {
     diffs: gitDiffs,
@@ -158,7 +174,11 @@ export function useGitPanelController({
     isLoading: gitLogLoading,
     error: gitLogError,
     refresh: refreshGitLog,
-  } = useGitLog(activeWorkspace, shouldLoadGitLog);
+  } = useGitLog(activeWorkspace, shouldLoadGitLog, {
+    pollingEnabled: logUiVisible,
+    refreshIntervalMs: GIT_LOG_REFRESH_INTERVAL_MS,
+    pauseWhenInactive: true,
+  });
 
   const {
     diffs: gitCommitDiffs,

@@ -11,6 +11,48 @@ type UseThreadRateLimitsOptions = {
   onDebug?: (entry: DebugEntry) => void;
 };
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  return value as Record<string, unknown>;
+}
+
+function looksLikeRateLimits(value: Record<string, unknown> | null): boolean {
+  if (!value) {
+    return false;
+  }
+  return (
+    value.primary !== undefined ||
+    value.secondary !== undefined ||
+    value.credits !== undefined ||
+    value.planType !== undefined ||
+    value.plan_type !== undefined
+  );
+}
+
+function extractRateLimitsPayload(response: unknown): Record<string, unknown> | null {
+  const responseRecord = asRecord(response);
+  const resultRecord = asRecord(responseRecord?.result);
+
+  const wrappedRateLimits =
+    asRecord(resultRecord?.rateLimits) ??
+    asRecord(resultRecord?.rate_limits) ??
+    asRecord(responseRecord?.rateLimits) ??
+    asRecord(responseRecord?.rate_limits);
+  if (wrappedRateLimits) {
+    return wrappedRateLimits;
+  }
+
+  if (looksLikeRateLimits(resultRecord)) {
+    return resultRecord;
+  }
+  if (looksLikeRateLimits(responseRecord)) {
+    return responseRecord;
+  }
+  return null;
+}
+
 export function useThreadRateLimits({
   activeWorkspaceId,
   activeWorkspaceConnected,
@@ -39,11 +81,7 @@ export function useThreadRateLimits({
           label: "account/rateLimits/read response",
           payload: response,
         });
-        const rateLimits =
-          (response?.result?.rateLimits as Record<string, unknown> | undefined) ??
-          (response?.result?.rate_limits as Record<string, unknown> | undefined) ??
-          (response?.rateLimits as Record<string, unknown> | undefined) ??
-          (response?.rate_limits as Record<string, unknown> | undefined);
+        const rateLimits = extractRateLimitsPayload(response);
         if (rateLimits) {
           dispatch({
             type: "setRateLimits",
@@ -65,9 +103,12 @@ export function useThreadRateLimits({
   );
 
   useEffect(() => {
-    if (activeWorkspaceConnected && activeWorkspaceId) {
-      void refreshAccountRateLimits(activeWorkspaceId);
+    if (!activeWorkspaceId) {
+      return;
     }
+    // Always attempt a direct refresh for the selected workspace so limits are not gated on
+    // thread/session selection timing.
+    void refreshAccountRateLimits(activeWorkspaceId);
   }, [activeWorkspaceConnected, activeWorkspaceId, refreshAccountRateLimits]);
 
   return { refreshAccountRateLimits };

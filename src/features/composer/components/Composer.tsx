@@ -59,6 +59,11 @@ type ComposerProps = {
   reasoningSupported: boolean;
   accessMode: "read-only" | "current" | "full-access";
   onSelectAccessMode: (mode: "read-only" | "current" | "full-access") => void;
+  agentMode: "local" | "worktree";
+  onSelectAgentMode: (mode: "local" | "worktree") => void;
+  worktreeFromBranch?: string;
+  worktreeFromBranchOptions?: string[];
+  onSelectWorktreeFromBranch?: (branch: string) => void;
   skills: { name: string; description?: string }[];
   apps: AppOption[];
   prompts: CustomPromptOption[];
@@ -155,6 +160,11 @@ export const Composer = memo(function Composer({
   reasoningSupported,
   accessMode,
   onSelectAccessMode,
+  agentMode,
+  onSelectAgentMode,
+  worktreeFromBranch = "main",
+  worktreeFromBranchOptions = [],
+  onSelectWorktreeFromBranch,
   skills,
   apps,
   prompts,
@@ -749,6 +759,14 @@ export const Composer = memo(function Composer({
         showCollaborationSelector={!canUsePlanToggle}
         accessMode={accessMode}
         onSelectAccessMode={onSelectAccessMode}
+        agentMode={agentMode}
+        onSelectAgentMode={onSelectAgentMode}
+        showWorktreeFromBranch={
+          agentMode === "worktree" && worktreeFromBranchOptions.length > 0
+        }
+        worktreeFromBranch={worktreeFromBranch}
+        worktreeFromBranchOptions={worktreeFromBranchOptions}
+        onSelectWorktreeFromBranch={onSelectWorktreeFromBranch}
         contextUsage={contextUsage}
       />
     </footer>

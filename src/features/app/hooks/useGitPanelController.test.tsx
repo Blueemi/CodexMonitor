@@ -42,6 +42,7 @@ function makeProps(overrides?: Partial<Parameters<typeof useGitPanelController>[
     isTablet: false,
     activeTab: "codex" as const,
     tabletTab: "codex" as const,
+    rightPanelCollapsed: false,
     setActiveTab: vi.fn(),
     prDiffs: [],
     prDiffsLoading: false,

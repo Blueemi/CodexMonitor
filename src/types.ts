@@ -143,6 +143,7 @@ export type PullRequestSelectionRange = {
 };
 
 export type AccessMode = "read-only" | "current" | "full-access";
+export type NewAgentMode = "local" | "worktree";
 export type BackendMode = "local" | "remote";
 export type RemoteBackendProvider = "tcp" | "orbit";
 export type ThemePreference = "system" | "light" | "dark" | "dim";

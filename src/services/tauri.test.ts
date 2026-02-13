@@ -118,6 +118,26 @@ describe("tauri invoke wrappers", () => {
 
     expect(invokeMock).toHaveBeenCalledWith("get_git_status", {
       workspaceId: "ws-1",
+      includeLineStats: undefined,
+    });
+  });
+
+  it("forwards includeLineStats for git status", async () => {
+    const invokeMock = vi.mocked(invoke);
+    invokeMock.mockResolvedValueOnce({
+      branchName: "main",
+      files: [],
+      stagedFiles: [],
+      unstagedFiles: [],
+      totalAdditions: 0,
+      totalDeletions: 0,
+    });
+
+    await getGitStatus("ws-1", { includeLineStats: false });
+
+    expect(invokeMock).toHaveBeenCalledWith("get_git_status", {
+      workspaceId: "ws-1",
+      includeLineStats: false,
     });
   });
 

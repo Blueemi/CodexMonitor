@@ -14,6 +14,7 @@ import Mic from "lucide-react/dist/esm/icons/mic";
 import Square from "lucide-react/dist/esm/icons/square";
 import Brain from "lucide-react/dist/esm/icons/brain";
 import GitFork from "lucide-react/dist/esm/icons/git-fork";
+import GitBranch from "lucide-react/dist/esm/icons/git-branch";
 import PlusCircle from "lucide-react/dist/esm/icons/plus-circle";
 import Plus from "lucide-react/dist/esm/icons/plus";
 import Info from "lucide-react/dist/esm/icons/info";
@@ -76,6 +77,10 @@ type ComposerInputProps = {
   selectedEffort: string | null;
   onSelectEffort: (effort: string) => void;
   reasoningSupported: boolean;
+  showWorktreeFromBranch?: boolean;
+  worktreeFromBranch?: string;
+  worktreeFromBranchOptions?: string[];
+  onSelectWorktreeFromBranch?: (branch: string) => void;
   showPlanToggle?: boolean;
   planLabel?: string;
   planSelected?: boolean;
@@ -189,6 +194,10 @@ export function ComposerInput({
   selectedEffort,
   onSelectEffort,
   reasoningSupported,
+  showWorktreeFromBranch = false,
+  worktreeFromBranch = "main",
+  worktreeFromBranchOptions = [],
+  onSelectWorktreeFromBranch,
   showPlanToggle = false,
   planLabel = "Plan",
   planSelected = false,
@@ -217,13 +226,17 @@ export function ComposerInput({
   const mobileActionsRef = useRef<HTMLDivElement | null>(null);
   const modelMenuRef = useRef<HTMLDivElement | null>(null);
   const effortMenuRef = useRef<HTMLDivElement | null>(null);
+  const worktreeFromBranchMenuRef = useRef<HTMLDivElement | null>(null);
   const modelDropdownRef = useRef<HTMLDivElement | null>(null);
   const effortDropdownRef = useRef<HTMLDivElement | null>(null);
+  const worktreeFromBranchDropdownRef = useRef<HTMLDivElement | null>(null);
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
   const [modelMenuOpen, setModelMenuOpen] = useState(false);
   const [effortMenuOpen, setEffortMenuOpen] = useState(false);
+  const [worktreeFromBranchMenuOpen, setWorktreeFromBranchMenuOpen] = useState(false);
   const [modelMenuAbove, setModelMenuAbove] = useState(false);
   const [effortMenuAbove, setEffortMenuAbove] = useState(false);
+  const [worktreeFromBranchMenuAbove, setWorktreeFromBranchMenuAbove] = useState(false);
   const [isPhoneLayout, setIsPhoneLayout] = useState(false);
   const [isPhoneTallInput, setIsPhoneTallInput] = useState(false);
   const reviewPromptOpen = Boolean(reviewPrompt);
@@ -366,12 +379,19 @@ export function ComposerInput({
     onClose: () => setEffortMenuOpen(false),
   });
 
+  useDismissibleMenu({
+    isOpen: worktreeFromBranchMenuOpen,
+    containerRef: worktreeFromBranchMenuRef,
+    onClose: () => setWorktreeFromBranchMenuOpen(false),
+  });
+
   useEffect(() => {
     if (!disabled) {
       return;
     }
     setModelMenuOpen(false);
     setEffortMenuOpen(false);
+    setWorktreeFromBranchMenuOpen(false);
   }, [disabled]);
 
   const updateMenuPlacement = useCallback(
@@ -428,6 +448,26 @@ export function ComposerInput({
       window.removeEventListener("scroll", update, true);
     };
   }, [effortMenuOpen, updateMenuPlacement]);
+
+  useLayoutEffect(() => {
+    if (!worktreeFromBranchMenuOpen) {
+      setWorktreeFromBranchMenuAbove(false);
+      return;
+    }
+    const update = () =>
+      updateMenuPlacement(
+        worktreeFromBranchMenuRef,
+        worktreeFromBranchDropdownRef,
+        setWorktreeFromBranchMenuAbove,
+      );
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [worktreeFromBranchMenuOpen, updateMenuPlacement]);
 
   const handleActionClick = useCallback(() => {
     if (canStop) {
@@ -793,6 +833,7 @@ export function ComposerInput({
               onClick={() => {
                 setModelMenuOpen((prev) => !prev);
                 setEffortMenuOpen(false);
+                setWorktreeFromBranchMenuOpen(false);
               }}
               disabled={disabled}
             >
@@ -834,6 +875,7 @@ export function ComposerInput({
               onClick={() => {
                 setEffortMenuOpen((prev) => !prev);
                 setModelMenuOpen(false);
+                setWorktreeFromBranchMenuOpen(false);
               }}
               disabled={disabled || !reasoningSupported}
             >
@@ -940,6 +982,58 @@ export function ComposerInput({
           </button>
         </div>
       </div>
+      {showWorktreeFromBranch && (
+        <div className="composer-worktree-source-row">
+          <div className="composer-worktree-source-menu" ref={worktreeFromBranchMenuRef}>
+            <button
+              type="button"
+              className="composer-worktree-source-button"
+              aria-label="Worktree base branch"
+              aria-haspopup="menu"
+              aria-expanded={worktreeFromBranchMenuOpen}
+              onClick={() => {
+                setWorktreeFromBranchMenuOpen((prev) => !prev);
+                setModelMenuOpen(false);
+                setEffortMenuOpen(false);
+              }}
+              disabled={disabled || worktreeFromBranchOptions.length === 0}
+            >
+              <GitBranch size={13} aria-hidden />
+              <span className="composer-worktree-source-text">
+                From {worktreeFromBranch || "main"}
+              </span>
+              <ChevronDown size={13} aria-hidden />
+            </button>
+            {worktreeFromBranchMenuOpen && (
+              <PopoverSurface
+                ref={worktreeFromBranchDropdownRef}
+                className={`composer-worktree-source-dropdown${
+                  worktreeFromBranchMenuAbove ? " is-above" : ""
+                }`}
+                role="menu"
+              >
+                {worktreeFromBranchOptions.length === 0 ? (
+                  <div className="composer-toolbar-dropdown-empty">No branches</div>
+                ) : (
+                  worktreeFromBranchOptions.map((branch) => (
+                    <PopoverMenuItem
+                      key={branch}
+                      className="composer-toolbar-option"
+                      onClick={() => {
+                        onSelectWorktreeFromBranch?.(branch);
+                        setWorktreeFromBranchMenuOpen(false);
+                      }}
+                      active={branch === worktreeFromBranch}
+                    >
+                      {branch}
+                    </PopoverMenuItem>
+                  ))
+                )}
+              </PopoverSurface>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

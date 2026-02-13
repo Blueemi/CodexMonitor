@@ -405,6 +405,7 @@ export function useWorkspaces(options: UseWorkspacesOptions = {}) {
       activate?: boolean;
       displayName?: string | null;
       copyAgentsMd?: boolean;
+      fromBranch?: string | null;
     },
   ) {
     const trimmed = branch.trim();
@@ -413,6 +414,7 @@ export function useWorkspaces(options: UseWorkspacesOptions = {}) {
     }
     const trimmedName = options?.displayName?.trim() || null;
     const copyAgentsMd = options?.copyAgentsMd ?? true;
+    const fromBranch = options?.fromBranch?.trim() || null;
     onDebug?.({
       id: `${Date.now()}-client-add-worktree`,
       timestamp: Date.now(),
@@ -421,6 +423,7 @@ export function useWorkspaces(options: UseWorkspacesOptions = {}) {
       payload: {
         parentId: parent.id,
         branch: trimmed,
+        fromBranch,
         name: trimmedName,
         copyAgentsMd,
       },
@@ -431,6 +434,7 @@ export function useWorkspaces(options: UseWorkspacesOptions = {}) {
         trimmed,
         trimmedName,
         copyAgentsMd,
+        fromBranch,
       );
       setWorkspaces((prev) => [...prev, workspace]);
       if (options?.activate !== false) {
@@ -847,11 +851,13 @@ export function useWorkspaces(options: UseWorkspacesOptions = {}) {
   async function removeWorktree(workspaceId: string) {
     const workspace = workspaces.find((entry) => entry.id === workspaceId);
     const workspaceName = workspace?.name || "this worktree";
+    const worktreeBranch = workspace?.worktree?.branch?.trim();
+    const targetLabel = worktreeBranch?.length ? worktreeBranch : workspaceName;
 
     const confirmed = await ask(
-      `Are you sure you want to delete "${workspaceName}"?\n\nThis will close the agent, remove its worktree, and delete it from CodexMonitor.`,
+      `Are you sure you want to delete "${targetLabel}"?\n\nThis will close the agent, remove its worktree, delete the local branch, and remove it from CodexMonitor.`,
       {
-        title: "Delete Worktree",
+        title: "Delete Branch",
         kind: "warning",
         okLabel: "Delete",
         cancelLabel: "Cancel",
@@ -888,7 +894,7 @@ export function useWorkspaces(options: UseWorkspacesOptions = {}) {
         payload: errorMessage,
       });
       void message(errorMessage, {
-        title: "Delete worktree failed",
+        title: "Delete branch failed",
         kind: "error",
       });
     } finally {

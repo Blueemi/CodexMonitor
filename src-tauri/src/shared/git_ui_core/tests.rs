@@ -112,7 +112,7 @@ fn get_git_status_omits_global_ignored_paths() {
 
     let runtime = Runtime::new().expect("create tokio runtime");
     let status = runtime
-        .block_on(diff::get_git_status_inner(&workspaces, "w1".to_string()))
+        .block_on(diff::get_git_status_inner(&workspaces, "w1".to_string(), true))
         .expect("get git status");
 
     let has_ignored = status
@@ -125,6 +125,79 @@ fn get_git_status_omits_global_ignored_paths() {
     assert!(
         !has_ignored,
         "ignored files should not appear in unstagedFiles"
+    );
+}
+
+#[test]
+fn get_git_status_lightweight_mode_skips_line_stats() {
+    let (root, repo) = create_temp_repo();
+    fs::write(root.join("tracked.txt"), "tracked\n").expect("write tracked file");
+    let mut index = repo.index().expect("repo index");
+    index.add_path(Path::new("tracked.txt")).expect("add path");
+    let tree_id = index.write_tree().expect("write tree");
+    let tree = repo.find_tree(tree_id).expect("find tree");
+    let sig = git2::Signature::now("Test", "test@example.com").expect("signature");
+    repo.commit(Some("HEAD"), &sig, &sig, "init", &tree, &[])
+        .expect("commit");
+
+    fs::write(root.join("tracked.txt"), "tracked\nupdated\n").expect("update tracked file");
+
+    let workspace = WorkspaceEntry {
+        id: "w1".to_string(),
+        name: "w1".to_string(),
+        path: root.to_string_lossy().to_string(),
+        codex_bin: None,
+        kind: WorkspaceKind::Main,
+        parent_id: None,
+        worktree: None,
+        settings: WorkspaceSettings::default(),
+    };
+    let mut entries = HashMap::new();
+    entries.insert("w1".to_string(), workspace);
+    let workspaces = Mutex::new(entries);
+
+    let runtime = Runtime::new().expect("create tokio runtime");
+    let status = runtime
+        .block_on(diff::get_git_status_inner(&workspaces, "w1".to_string(), false))
+        .expect("get git status");
+
+    let unstaged = status
+        .get("unstagedFiles")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
+    assert!(!unstaged.is_empty(), "expected unstaged file entry");
+
+    let additions_nonzero = unstaged.iter().any(|entry| {
+        entry
+            .get("additions")
+            .and_then(Value::as_i64)
+            .unwrap_or_default()
+            != 0
+    });
+    let deletions_nonzero = unstaged.iter().any(|entry| {
+        entry
+            .get("deletions")
+            .and_then(Value::as_i64)
+            .unwrap_or_default()
+            != 0
+    });
+
+    assert!(!additions_nonzero, "lightweight mode should skip addition counts");
+    assert!(!deletions_nonzero, "lightweight mode should skip deletion counts");
+    assert_eq!(
+        status
+            .get("totalAdditions")
+            .and_then(Value::as_i64)
+            .unwrap_or_default(),
+        0
+    );
+    assert_eq!(
+        status
+            .get("totalDeletions")
+            .and_then(Value::as_i64)
+            .unwrap_or_default(),
+        0
     );
 }
 

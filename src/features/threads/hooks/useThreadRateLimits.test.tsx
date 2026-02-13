@@ -78,7 +78,7 @@ describe("useThreadRateLimits", () => {
 
     const { result } = renderHook(() =>
       useThreadRateLimits({
-        activeWorkspaceId: "ws-1",
+        activeWorkspaceId: null,
         activeWorkspaceConnected: false,
         dispatch,
       }),
@@ -92,6 +92,68 @@ describe("useThreadRateLimits", () => {
     expect(dispatch).toHaveBeenCalledWith({
       type: "setRateLimits",
       workspaceId: "ws-2",
+      rateLimits: normalizeRateLimits(rawRateLimits),
+    });
+  });
+
+  it("auto-refreshes active workspace even when connected flag is false", async () => {
+    const dispatch = vi.fn();
+    const rawRateLimits = {
+      primary: { used_percent: 21, window_minutes: 300, resets_at: 1700000000 },
+      secondary: { used_percent: 48, window_minutes: 10080, resets_at: 1700003600 },
+    };
+
+    vi.mocked(getAccountRateLimits).mockResolvedValue({
+      result: { rate_limits: rawRateLimits },
+    });
+
+    renderHook(() =>
+      useThreadRateLimits({
+        activeWorkspaceId: "ws-1",
+        activeWorkspaceConnected: false,
+        dispatch,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(getAccountRateLimits).toHaveBeenCalledWith("ws-1");
+    });
+
+    await waitFor(() => {
+      expect(dispatch).toHaveBeenCalledWith({
+        type: "setRateLimits",
+        workspaceId: "ws-1",
+        rateLimits: normalizeRateLimits(rawRateLimits),
+      });
+    });
+  });
+
+  it("handles direct result payloads from account/rateLimits/read", async () => {
+    const dispatch = vi.fn();
+    const rawRateLimits = {
+      primary: { usedPercent: 12, windowDurationMins: 300, resetsAt: 123456 },
+      secondary: { usedPercent: 40, windowDurationMins: 10080, resetsAt: 234567 },
+    };
+
+    vi.mocked(getAccountRateLimits).mockResolvedValue({
+      result: rawRateLimits,
+    });
+
+    const { result } = renderHook(() =>
+      useThreadRateLimits({
+        activeWorkspaceId: "ws-1",
+        activeWorkspaceConnected: false,
+        dispatch,
+      }),
+    );
+
+    await act(async () => {
+      await result.current.refreshAccountRateLimits();
+    });
+
+    expect(dispatch).toHaveBeenCalledWith({
+      type: "setRateLimits",
+      workspaceId: "ws-1",
       rateLimits: normalizeRateLimits(rawRateLimits),
     });
   });

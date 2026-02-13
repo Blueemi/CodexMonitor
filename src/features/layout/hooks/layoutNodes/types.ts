@@ -22,6 +22,7 @@ import type {
   GitLogEntry,
   LocalUsageSnapshot,
   ModelOption,
+  NewAgentMode,
   OpenAppTarget,
   QueuedMessage,
   PullRequestReviewAction,
@@ -151,8 +152,6 @@ export type LayoutNodesOptions = {
   onSelectWorkspace: (workspaceId: string) => void;
   onConnectWorkspace: (workspace: WorkspaceInfo) => Promise<void>;
   onAddAgent: (workspace: WorkspaceInfo) => Promise<void>;
-  onAddWorktreeAgent: (workspace: WorkspaceInfo) => Promise<void>;
-  onAddCloneAgent: (workspace: WorkspaceInfo) => Promise<void>;
   onToggleWorkspaceCollapse: (workspaceId: string, collapsed: boolean) => void;
   onSelectThread: (workspaceId: string, threadId: string) => void;
   onOpenThreadLink: (threadId: string) => void;
@@ -426,6 +425,11 @@ export type LayoutNodesOptions = {
   reasoningSupported: boolean;
   accessMode: AccessMode;
   onSelectAccessMode: (mode: AccessMode) => void;
+  newAgentMode: NewAgentMode;
+  onSelectNewAgentMode: (mode: NewAgentMode) => void;
+  worktreeFromBranch: string;
+  worktreeFromBranchOptions: string[];
+  onSelectWorktreeFromBranch: (branch: string) => void;
   skills: SkillOption[];
   appsEnabled: boolean;
   apps: AppOption[];

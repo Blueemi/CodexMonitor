@@ -319,7 +319,8 @@ export function useAppServerEvents(handlers: AppServerEventHandlers) {
       if (method === "account/rateLimits/updated") {
         const rateLimits =
           (params.rateLimits as Record<string, unknown> | undefined) ??
-          (params.rate_limits as Record<string, unknown> | undefined);
+          (params.rate_limits as Record<string, unknown> | undefined) ??
+          (params.primary || params.secondary || params.credits ? params : undefined);
         if (rateLimits) {
           currentHandlers.onAccountRateLimitsUpdated?.(workspace_id, rateLimits);
         }

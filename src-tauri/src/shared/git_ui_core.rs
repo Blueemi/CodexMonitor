@@ -38,8 +38,9 @@ pub(crate) fn collect_workspace_diff_core(repo_root: &Path) -> Result<String, St
 pub(crate) async fn get_git_status_core(
     workspaces: &Mutex<HashMap<String, WorkspaceEntry>>,
     workspace_id: String,
+    include_line_stats: bool,
 ) -> Result<Value, String> {
-    diff::get_git_status_inner(workspaces, workspace_id).await
+    diff::get_git_status_inner(workspaces, workspace_id, include_line_stats).await
 }
 
 pub(crate) async fn list_git_roots_core(

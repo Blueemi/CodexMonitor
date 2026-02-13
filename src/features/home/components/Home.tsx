@@ -1,5 +1,6 @@
 import FolderOpen from "lucide-react/dist/esm/icons/folder-open";
 import RefreshCw from "lucide-react/dist/esm/icons/refresh-cw";
+import { useEffect, useRef } from "react";
 import type { LocalUsageSnapshot } from "../../../types";
 import { formatRelativeTime } from "../../../utils/time";
 
@@ -196,7 +197,18 @@ export function Home({
 
   const usageTotals = localUsageSnapshot?.totals ?? null;
   const usageDays = localUsageSnapshot?.days ?? [];
+  const usageChartDays = usageDays;
+  const usageChartScrollRef = useRef<HTMLDivElement | null>(null);
   const last7Days = usageDays.slice(-7);
+
+  useEffect(() => {
+    const chartScrollElement = usageChartScrollRef.current;
+    if (!chartScrollElement) {
+      return;
+    }
+    chartScrollElement.scrollLeft = chartScrollElement.scrollWidth;
+  }, [usageChartDays.length]);
+
   const last7AgentMs = last7Days.reduce(
     (total, day) => total + (day.agentTimeMs ?? 0),
     0,
@@ -228,7 +240,7 @@ export function Home({
   const peakAgentTimeMs = peakAgentDay?.agentTimeMs ?? 0;
   const maxUsageValue = Math.max(
     1,
-    ...last7Days.map((day) =>
+    ...usageChartDays.map((day) =>
       usageMetric === "tokens" ? day.totalTokens : day.agentTimeMs ?? 0,
     ),
   );
@@ -578,7 +590,10 @@ export function Home({
                     </div>
                     {renderCostPreview("last 30 days", last30CostPreview)}
                   </div>
-                  <div className="home-usage-card home-usage-card-with-preview" tabIndex={0}>
+                  <div
+                    className="home-usage-card home-usage-card-with-preview home-usage-card-with-right-preview"
+                    tabIndex={0}
+                  >
                     <div className="home-usage-label">All time</div>
                     <div className="home-usage-value">
                       <span className="home-usage-number">
@@ -654,34 +669,41 @@ export function Home({
               )}
             </div>
             <div className="home-usage-chart-card">
-              <div className="home-usage-chart">
-                {last7Days.map((day) => {
-                  const value =
-                    usageMetric === "tokens" ? day.totalTokens : day.agentTimeMs ?? 0;
-                  const height = Math.max(
-                    6,
-                    Math.round((value / maxUsageValue) * 100),
-                  );
-                  const tooltip =
-                    usageMetric === "tokens"
-                      ? `${formatDayLabel(day.day)} · ${formatCount(day.totalTokens)} tokens`
-                      : `${formatDayLabel(day.day)} · ${formatDuration(day.agentTimeMs ?? 0)} agent time`;
-                  return (
-                    <div
-                      className="home-usage-bar"
-                      key={day.day}
-                      data-value={tooltip}
-                    >
-                      <span
-                        className="home-usage-bar-fill"
-                        style={{ height: `${height}%` }}
-                      />
-                      <span className="home-usage-bar-label">
-                        {formatDayLabel(day.day)}
-                      </span>
-                    </div>
-                  );
-                })}
+              <div className="home-usage-chart-scroll" ref={usageChartScrollRef}>
+                <div
+                  className="home-usage-chart"
+                  style={{
+                    width: `max(100%, ${Math.max(usageChartDays.length, 7) * 52}px)`,
+                  }}
+                >
+                  {usageChartDays.map((day) => {
+                    const value =
+                      usageMetric === "tokens" ? day.totalTokens : day.agentTimeMs ?? 0;
+                    const height = Math.max(
+                      6,
+                      Math.round((value / maxUsageValue) * 100),
+                    );
+                    const tooltip =
+                      usageMetric === "tokens"
+                        ? `${formatDayLabel(day.day)} · ${formatCount(day.totalTokens)} tokens`
+                        : `${formatDayLabel(day.day)} · ${formatDuration(day.agentTimeMs ?? 0)} agent time`;
+                    return (
+                      <div
+                        className="home-usage-bar"
+                        key={day.day}
+                        data-value={tooltip}
+                      >
+                        <span
+                          className="home-usage-bar-fill"
+                          style={{ height: `${height}%` }}
+                        />
+                        <span className="home-usage-bar-label">
+                          {formatDayLabel(day.day)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
             <div className="home-usage-models">

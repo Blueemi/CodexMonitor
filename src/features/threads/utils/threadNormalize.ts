@@ -133,7 +133,11 @@ export function normalizeRateLimits(raw: Record<string, unknown>): RateLimitSnap
       ? {
           usedPercent: asNumber(primary.usedPercent ?? primary.used_percent),
           windowDurationMins: (() => {
-            const value = primary.windowDurationMins ?? primary.window_duration_mins;
+            const value =
+              primary.windowDurationMins ??
+              primary.windowDurationMinutes ??
+              primary.window_duration_mins ??
+              primary.window_minutes;
             if (typeof value === "number") {
               return value;
             }
@@ -160,7 +164,11 @@ export function normalizeRateLimits(raw: Record<string, unknown>): RateLimitSnap
       ? {
           usedPercent: asNumber(secondary.usedPercent ?? secondary.used_percent),
           windowDurationMins: (() => {
-            const value = secondary.windowDurationMins ?? secondary.window_duration_mins;
+            const value =
+              secondary.windowDurationMins ??
+              secondary.windowDurationMinutes ??
+              secondary.window_duration_mins ??
+              secondary.window_minutes;
             if (typeof value === "number") {
               return value;
             }
